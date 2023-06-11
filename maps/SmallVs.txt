@@ -1,0 +1,20 @@
+# Author Serge-David
+# Map File testing, lets see if we can make this pretty. Map name is it's file name.
+# 1 = Map Info : width(xx) height(xx) edu.ufp.inf.sd.rmi.Project.client.players(x)
+# 2 = Extra Info : Creator(String) Description(String) [A-z 0-9]
+# 3 = Terrain Info (row) : tile(x) (To be xx for 256 types instead of 16)
+# 4 = Building Info : owner(x) x(xx) y(xx) type(xx) TODO: Find a way to add neutral edu.ufp.inf.sd.rmi.Project.client.buildings without messing with player counts, maybe leaving that byte blank?
+# 5 = Unit info : owner(x) x(xx) y(xx) type(xx)
+1 07072
+2 Serge-David This is a description of the map.
+4 22100122
+4 21000012
+4 10040001
+4 40000004
+4 40000004
+4 10004001
+4 21000012
+4 22100122
+3 f01000102002100f01
+5 1030300
+5 0040400
