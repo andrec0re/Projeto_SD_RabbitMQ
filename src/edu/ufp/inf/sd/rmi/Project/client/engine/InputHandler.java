@@ -6,7 +6,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
+import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Keyboard handling for the game along with the mouse setup for game handling.
@@ -54,123 +57,72 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		int i=e.getKeyCode();
 		if (i==exit) {System.exit(0);}
 		try {
-			if (Game.GameState==Game.State.PLAYING && Game.observerRI.isTurn()) {
+			if (Game.GameState==Game.State.PLAYING) {
 				edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
 
-				if (i==up) {
-					/*ply.selecty--;if (ply.selecty<0) {ply.selecty++;}*/
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("up");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
+				if (i == up) {
+					String message = Game.u + ";" + "up";
+					System.out.println(" [x] Sent '" + message + "'");
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+				} else if (i == down) {
+					String message = Game.u + ";" + "down";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == left) {
+					String message = Game.u + ";" + "left";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == right) {
+					String message = Game.u + ";" + "right";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == select) {
+					String message = Game.u + ";" + "select";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == cancel) {
+					String message = Game.u + ";" + "cancel";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == start) {
+					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause();
 				}
-				else if (i==down) {
-					/*ply.selecty++;if (ply.selecty>=Game.map.height) {ply.selecty--;}*/
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("down");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==left) {
-					/*ply.selectx--;if (ply.selectx<0) {ply.selectx++;}*/
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("left");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==right) {
-					/*ply.selectx++;if (ply.selectx>=Game.map.width) {ply.selectx--;}*/
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("right");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==select) {
-					//Game.btl.Action();
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("select");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==cancel) {
-					//Game.player.get(Game.btl.currentplayer).Cancle();
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("cancel");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==start) {new edu.ufp.inf.sd.rmi.Project.client.menus.Pause();}
 			}
-		} catch (RemoteException remoteException) {
+		} catch (IOException remoteException) {
 			remoteException.printStackTrace();
 		}
 
 		try {
-			if (Game.GameState==Game.State.EDITOR && Game.observerRI.isTurn()) {
-				if (i==up) {
-					//Game.edit.selecty--;if (Game.edit.selecty<0) {Game.edit.selecty++;} Game.edit.moved = true;}
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("up");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==down) {
-					//Game.edit.selecty++;if (Game.edit.selecty>=Game.map.height) {Game.edit.selecty--;} Game.edit.moved = true;}
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("down");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==left) {
-					//Game.edit.selectx--;if (Game.edit.selectx<0) {Game.edit.selectx++;} Game.edit.moved = true;}
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("left");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==right) {
-					//Game.edit.selectx++;if (Game.edit.selectx>=Game.map.width) {Game.edit.selectx--;} Game.edit.moved = true;}
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("right");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==select) {
-					//Game.edit.holding = true;
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("select");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==cancel) {
-					//Game.edit.ButtButton();
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("cancel");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
-				}
-				else if (i==start) {
-					//new edu.ufp.inf.sd.rmi.Project.client.menus.EditorMenu();
-					try {
-						Game.observerRI.getSubjectRI().setSubjectState("start");	//send to subject so he notificies all observers
-					} catch (RemoteException remoteException) {
-						remoteException.printStackTrace();
-					}
+			if (Game.GameState==Game.State.EDITOR) {
+				if (i == up) {
+					String message = Game.u + ";" + "up";
+					System.out.println(" [x] Sent '" + message + "'");
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+				} else if (i == down) {
+					String message = Game.u + ";" + "down";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == left) {
+					String message = Game.u + ";" + "left";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == right) {
+					String message = Game.u + ";" + "right";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == select) {
+					String message = Game.u + ";" + "select";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == cancel) {
+					String message = Game.u + ";" + "cancel";
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} else if (i == start) {
+					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause();
 				}
 			}
-		} catch (RemoteException remoteException) {
+		} catch (IOException remoteException) {
 			remoteException.printStackTrace();
 		}
 

@@ -1,9 +1,9 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.project_rabbit;
+package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.rabbitmqservices.projeto.frogger.Game;
-import edu.ufp.inf.sd.rabbitmqservices.projeto.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 public class Observer {
 
     //Reference for gui
-    private  ObserverGuiClient gui;
+    private edu.ufp.inf.sd.rmi.Project.project_rabbit.ObserverGuiClient gui;
 
     //Preferences for exchange...
     private  Channel channelToRabbitMq;
@@ -56,6 +56,7 @@ public class Observer {
     private String queueName;
     private String queueNameFrontServer;
 
+    public String map;
     public Game Game;
     public String donoLobby="";
     public int nivelJogo=0;
@@ -177,15 +178,13 @@ public class Observer {
     }
 
     private String printMeuLobby() {
-        StringBuilder string = new StringBuilder("----- Players no meu fucking  Lobby -----\n");
+        StringBuilder string = new StringBuilder("----- Lobby Players-----\n");
         int i=0;
         for(String playerName : this.jogadoresLobby){
             string.append("\t[").append(++i).append("]").append(playerName).append("\n");
         }
         return string.toString();
     }
-
-
 
 
 
@@ -287,7 +286,7 @@ public class Observer {
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
                     if(json.getBoolean("comecar jogo")){
-                        this.Game=new Game(this.getID(),this.jogadoresLobby.size(),this,nivelJogo);
+                        this.Game=new Game();
                         ThreadJogo run = new ThreadJogo(this.Game);
                         new Thread(run).start();
                     }
@@ -295,14 +294,14 @@ public class Observer {
                 break;
             case "LETS START THE GAME":
                 if(json.getString("lobby").equals(this.donoLobby)){
-                    this.Game.startGame();
+                    this.Game.rpcStartGame();
                 }
                 break;
-            case "MoveFrog":
+            /*case "MoveFrog":
                 if(this.donoLobby.equals(json.getString("lobby")))
                     this.Game.update_players(receivedMessage);
                 break;
-
+            */
         }
     }
 

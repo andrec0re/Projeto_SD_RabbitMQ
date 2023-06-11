@@ -1,4 +1,4 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.consumer;
+package edu.ufp.inf.sd.rmi.Project.consumer;
 
 /**
  * 1. Run the rabbitmq server as a shell process, by calling:
@@ -20,7 +20,7 @@ package edu.ufp.inf.sd.rabbitmqservices.Project.consumer;
  */
 
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.rabbitmqservices.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 
 import java.io.IOException;
 import java.util.logging.Level;

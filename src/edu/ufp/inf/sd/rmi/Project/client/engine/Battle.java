@@ -1,5 +1,7 @@
 package edu.ufp.inf.sd.rmi.Project.client.engine;
 
+import buildings.Base;
+
 import java.util.ArrayList;
 
 /**Put the game stuff in here so all I have to do is end/start this to make a game work or not.*/
@@ -10,16 +12,16 @@ public class Battle {
 	public int currentplayer = 0;
 	public String mapname;
 	public boolean GameOver;
-	
+
 	//Game settings
 	boolean FogOfWar;
 	int startingmoney = 100;//How much you start with each round.
 	int buildingmoney = 50;//How much each building provides.
 	int day = 1;
-	
+
 	//Winning condition settings
 	public int playersleft = 1;
-	
+
 	public void NewGame(String mapname) {
 		Game.player = new ArrayList<edu.ufp.inf.sd.rmi.Project.client.players.Base>();
 		Game.builds = new ArrayList<edu.ufp.inf.sd.rmi.Project.client.buildings.Base>();
@@ -33,7 +35,7 @@ public class Battle {
 		this.mapname = mapname;
 		playersleft = totalplayers;
 		GameOver = false;
-		
+
 		/*
 		String a = "%9*OUU?B=D T9BO";
         String b = "cVX*#0Mb\\dC;]'=}";
@@ -66,7 +68,7 @@ public class Battle {
 		}
 		Game.pathing.LastChanged++;
 	}
-	
+
 	/**Grabs the number of edu.ufp.inf.sd.rmi.Project.client.buildings a player owns.*/
 	private int Buildingcount(int owner) {
 		int total = 0;
@@ -75,7 +77,7 @@ public class Battle {
 		}
 		return total;
 	}
-	
+
 	public void Action() {
 		edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(currentplayer);
 		if (ply.npc) {return;}
@@ -98,7 +100,7 @@ public class Battle {
 				ply.FindCity();
 			}
 		}
-	}	
+	}
 	/**This will be redone when I set up the unit buying menu.*/
 	public void Buyunit(int type, int x, int y) {
 		double cost = Game.displayU.get(type).cost*Game.player.get(currentplayer).CostBonus;
@@ -156,5 +158,5 @@ public class Battle {
 		}
 		//TODO: Change all edu.ufp.inf.sd.rmi.Project.client.buildings to be owned by the player.
 	}
-	
+
 }

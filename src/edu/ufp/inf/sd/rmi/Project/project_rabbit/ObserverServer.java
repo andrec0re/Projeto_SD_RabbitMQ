@@ -1,8 +1,8 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.project_rabbit;
+package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.rabbitmqservices.projeto.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

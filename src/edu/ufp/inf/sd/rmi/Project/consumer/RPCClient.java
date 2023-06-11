@@ -1,7 +1,6 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.consumer;
+package edu.ufp.inf.sd.rmi.Project.consumer;
 
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.rmi.Project.server.Vect;
 
 import java.io.BufferedReader;
 import java.io.IOException;

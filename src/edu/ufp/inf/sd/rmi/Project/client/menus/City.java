@@ -88,23 +88,26 @@ public class City implements ActionListener,ListSelectionListener {
 		Buy.addActionListener(this);
 		Units.addListSelectionListener(this);
 	}
-	
-	
-	@Override public void actionPerformed(ActionEvent e) {
+
+
+	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (s==Return) {MenuHandler.CloseMenu();}
-		else if (s==Buy) {
-			Game.btl.Buyunit(ids[Units.getSelectedIndex()], x, y);
-			System.out.println("ids - " + ids[Units.getSelectedIndex()] + "x- "+ x + "y- "+ y);
-
-			String State = String.format("Buy:-%d-%d-%d", ids[Units.getSelectedIndex()],x,y);			//extract 3 parametros
-			try {
-				Game.observerRI.getSubjectRI().setSubjectState(State);
-			} catch (RemoteException ex) {
-				ex.printStackTrace();
-			}
-
+		if (s == Return) {
 			MenuHandler.CloseMenu();
+		} else if (s == Buy) {
+			if (Game.isOnline) {
+				try {
+					String message = Game.u + ";buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y;
+					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					System.out.println(" [x] Sent '" + message + "'");
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			else {
+				Game.btl.Buyunit(ids[Units.getSelectedIndex()], x, y);
+				MenuHandler.CloseMenu();
+			}
 		}
 	}
 

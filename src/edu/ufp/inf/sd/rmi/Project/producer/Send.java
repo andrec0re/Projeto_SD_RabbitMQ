@@ -1,8 +1,8 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.producer;
+package edu.ufp.inf.sd.rmi.Project.producer;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import edu.ufp.inf.sd.rabbitmqservices.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;

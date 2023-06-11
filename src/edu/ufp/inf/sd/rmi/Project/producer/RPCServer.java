@@ -1,4 +1,4 @@
-package edu.ufp.inf.sd.rabbitmqservices.Project.producer;
+package edu.ufp.inf.sd.rmi.Project.producer;
 
 import com.rabbitmq.client.*;
 
@@ -45,7 +45,7 @@ public class RPCServer {
                     String message = new String(delivery.getBody(), "UTF-8");
                     int n = Integer.parseInt(message);
                     System.out.println(" [.] fib(" + message + ")");
-                    response += Calculator.fib(n);
+                    //response += Calculator.fib(n);
                    // String message2 = new String(delivery.getBody(), "UTF-8");
                 //    System.out.println(Calculator.calculate(message2));
                 } catch (RuntimeException e) {

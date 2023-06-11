@@ -11,10 +11,11 @@
  * @author Rui Moreira
  * @version 2.0
  */
-package edu.ufp.inf.sd.rabbitmqservices.Project.project_rabbit;
+package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 
 import com.rabbitmq.client.BuiltinExchangeType;
-import edu.ufp.inf.sd.rabbitmqservices.projeto.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.util.RabbitUtils;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
 
 import javax.swing.*;
 import java.io.IOException;
