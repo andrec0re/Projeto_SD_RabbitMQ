@@ -47,8 +47,6 @@ public class ObserverServer {
     private Boolean state=false;
 
 
-
-
     //Preferences for exchange...
     private  Channel channelToRabbitMq;
     private  Channel channelToRabbitMq_Servers;

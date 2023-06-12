@@ -97,11 +97,12 @@ public class Observer {
         if(inp.equals("0")){
             System.out.println("Quantos jogadores quer no seu lobby escolha entre 2 a 4");
             int nr_jogadores= myObj.nextInt();
-            System.out.println("Nivel de jogo entre 1 a 10");
+            System.out.println("Nivel de jogo entre 1 a 10");// Mapa SmallVs or FourCorners
             int nivel_jogo= myObj.nextInt();
 
             this.donoLobby=this.user;
             this.nivelJogo=nivel_jogo;
+            //mapa
             this.jogadoresLobby.add(this.user);
 
             json.put("operation","Criar lobby");
