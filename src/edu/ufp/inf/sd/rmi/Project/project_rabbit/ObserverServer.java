@@ -3,8 +3,7 @@ package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.*;
 import edu.ufp.inf.sd.rmi.util.RabbitUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.*;
 
 import java.io.IOException;
 import java.util.ArrayList;

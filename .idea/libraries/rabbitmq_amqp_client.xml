@@ -3,7 +3,6 @@
     <properties maven-id="com.rabbitmq:amqp-client:5.11.0" />
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/amqp-client-5.11.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/slf4j-api-1.7.30.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
