@@ -41,7 +41,7 @@ public class ObserverServer {
 
 
     private  HashMap<String,ArrayList<String>> lobbys_and_players =new HashMap<>();// Nr de Lobby e o nome do jogador no lobby
-    private  HashMap<String,Integer> lobbys_and_level =new HashMap<>();// Nr de Lobby e qts jogadores lá estão
+    private  HashMap<String, String> lobbys_and_map =new HashMap<String, String>();// Nr de Lobby e qts jogadores lá estão
     private  HashMap<String,Integer> lobbys_and_size =new HashMap<>();// Nr de Lobby e qts jogadores lá estão
     private Boolean state=false;
 
@@ -190,32 +190,50 @@ public class ObserverServer {
         System.out.println("JSON:"+json);
         switch (operation){
             case "Criar lobby":
-                System.out.println("entrei criar lobby");
+                //System.out.println("entrei criar lobby");
                 String donoLobby = json.getString("dono lobby");
                 int nrJogadores = json.getInt("nr jogadores");
-                int nivelJogo = json.getInt("nivel jogo");
+                String mapa = json.getString("mapa");
                 ArrayList<String> playersNoLobby = new ArrayList<>();
                 playersNoLobby.add(donoLobby);
                 this.lobbys_and_players.put(donoLobby,playersNoLobby);
-                this.lobbys_and_level.put(donoLobby,nivelJogo);
+                this.lobbys_and_map.put(donoLobby,mapa);
                 this.lobbys_and_size.put(donoLobby,nrJogadores);
                 System.out.println("Criei um novo lobby:" + this.lobbys_and_players);
                 break;
             case "Enter lobby":
-                System.out.println("entrei nos lobbys");
-                String lobby = json.getString("lobby");
+                //System.out.println("entrei nos lobbys");
+                String lobbyID = json.getString("lobby");
                 String user = json.getString("user");
-                if(!this.lobbys_and_players.get(lobby).contains(user)){
-                    this.lobbys_and_players.get(lobby).add(user);
+
+                // Convert lobby ID to lobby name
+                ArrayList<String> lobbyNames = new ArrayList<>(this.lobbys_and_players.keySet());
+                int lobbyIndex;
+                try {
+                    lobbyIndex = Integer.parseInt(lobbyID) - 1;
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid lobby ID: " + lobbyID);
+                    throw new RuntimeException("Invalid lobby ID: " + lobbyID);
                 }
-                System.out.println("Jogador "+ user+" entrou no lobby "+lobby+":" + this.lobbys_and_players);
+                if (lobbyIndex < 0 || lobbyIndex >= lobbyNames.size()) {
+                    System.out.println("Lobby ID out of range: " + lobbyID);
+                    throw new RuntimeException("Lobby ID out of range: " + lobbyID);
+                }
+                String lobbyName = lobbyNames.get(lobbyIndex);
+
+                // Use lobbyName instead of lobby
+                if (!this.lobbys_and_players.get(lobbyName).contains(user)) {
+                    this.lobbys_and_players.get(lobbyName).add(user);
+                }
+                System.out.println("Jogador "+ user+" entrou no lobby :"+ this.lobbys_and_players);
                 break;
+
             case "ServerOn":
                 if(!state){
 
                         String info = json.getString("info");
                         JSONArray info1 = json.getJSONArray("lobbys");
-                        JSONArray info2 = json.getJSONArray("lvl");
+                        JSONArray info2 = json.getJSONArray("mapa");
                         JSONArray info3 = json.getJSONArray("size");
                         System.out.println("INFO:"+info);
                         System.out.println("INFO1:"+info1);
@@ -231,14 +249,14 @@ public class ObserverServer {
                                 }
                             }
                             lobbys_and_players.put(info1.getString(i),players_normal);
-                            lobbys_and_level.put(info1.getString(i),info2.getInt(i));
+                            lobbys_and_map.put(info1.getString(i),info2.getString(i));
                             lobbys_and_size.put(info1.getString(i),info3.getInt(i));
 
                         }
                     System.out.println("SYNC:");
                     System.out.println("LOBBYS_AND_PLAYERS:"+lobbys_and_players);
                     System.out.println("LOBBYS_AND_SIZE:"+lobbys_and_size);
-                    System.out.println("LOBBYS_AND_LVL:"+lobbys_and_level);
+                    System.out.println("LOBBYS_AND_MAP:"+lobbys_and_map);
 
 
                     this.state=true;
@@ -310,17 +328,46 @@ public class ObserverServer {
                 sendMessageToServers(receivedMessage);
                 break;
             case "Enter lobby":
-                String lobby = json.getString("lobby");
+                String lobbyID = json.getString("lobby");
                 String user = json.getString("user");
-                System.out.println(user + " entrou no lobby do " + lobby);
+                ArrayList<String> lobbyNames = new ArrayList<>(this.lobbys_and_players.keySet());
 
-                this.lobbys_and_players.get(lobby).add(user);
-                json.put("jogadoresNoLobby",this.lobbys_and_players.get(lobby));
-                json.put("nivel",this.lobbys_and_level.get(lobby));
-                json.put("comecar jogo", this.lobbys_and_players.get(lobby).size() == this.lobbys_and_size.get(lobby));
-                sendMessage(json.toString(),lobby);
-                sendMessageToServers(receivedMessage);
+                // Validate lobbyID is a valid integer and within the range of available lobbies
+                int lobbyIndex;
+                try {
+                    lobbyIndex = Integer.parseInt(lobbyID) - 1; // Subtract 1 because list indices start at 0
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid lobby ID: " + lobbyID);
+                    throw new RuntimeException("Invalid lobby ID: " + lobbyID);
+                }
+                if (lobbyIndex < 0 || lobbyIndex >= lobbyNames.size()) {
+                    System.out.println("Lobby ID out of range: " + lobbyID);
+                    throw new RuntimeException("Lobby ID out of range: " + lobbyID);
+                }
+
+                // Get the lobby name corresponding to the given ID
+                String lobbyName = lobbyNames.get(lobbyIndex);
+
+                // The rest of your code can remain the same, but use lobbyName instead of lobby
+                ArrayList<String> players = this.lobbys_and_players.get(lobbyName);
+                if (players == null) {
+                    System.out.println("Lobby " + lobbyName + " does not exist.");
+                    throw new RuntimeException("Lobby " + lobbyName + " does not exist.");
+                } else {
+                    if (!players.contains(user)) {
+                        players.add(user);          //add user
+                        System.out.println(user + " entrou no lobby do " + lobbyName);
+                        json.put("jogadoresNoLobby", players);
+                        json.put("mapa", this.lobbys_and_map.get(lobbyName));
+                        json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
+                        sendMessage(json.toString(), lobbyName);
+                        sendMessageToServers(receivedMessage);
+                    } else {
+                        System.out.println("User " + user + " is already in the lobby " + lobbyName);
+                    }
+                }
                 break;
+
             case "LETS START THE GAME":
                 sendMessage(json.toString(), json.getString("lobby"));
             case "MoveFrog":
@@ -336,17 +383,17 @@ public class ObserverServer {
         System.out.println(this.lobbys_and_players);
 
         if(this.lobbys_and_players.size()>0){
-            lobbys.append("Insira o nome do lobby que deseja entrar:\n");
+            lobbys.append("Insira o id do lobby que deseja entrar:\n");
             for (Map.Entry<String, ArrayList<String>> lobby : this.lobbys_and_players.entrySet()){//percorre lobbys
                 String dono = lobby.getKey();
                 int sizePlayer = lobby.getValue().size();
-                lobbys.append("\t[").append(++pos).append("]").append("Lobby do  ").append(dono).
-                        append(" : ").append("\t nivel de jogo:").
-                        append(this.lobbys_and_level.get(dono)).append("\t").append(sizePlayer).append("/").append(this.lobbys_and_size.get(dono)).append("\n");
+                lobbys.append("\t[").append(++pos).append("]").append("Lobby criado por ").append(dono).
+                        append(" | ").append("\t mapa:").
+                        append(this.lobbys_and_map.get(dono)).append("\t").append(sizePlayer).append("/").append(this.lobbys_and_size.get(dono)).append("\n");
             }
             lobbys.append("Ou insira '0' para criar um lobby\n");
         }else{
-            lobbys.append("Nao existem Lobbys criados neste momento! Insira 0 para criar um lobby\n");
+            lobbys.append("Não existem lobbies criados neste momento! Insira 0 para criar um lobby\n");
         }
         return lobbys.toString();
     }

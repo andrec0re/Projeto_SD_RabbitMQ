@@ -59,8 +59,7 @@ public class Observer {
     public String map;
     public Game Game;
     public String donoLobby="";
-    public int nivelJogo=0;
-    public int position=0;
+    public int mapa;
 
     //Store received message to be get by gui
     private String receivedMessage;
@@ -95,20 +94,28 @@ public class Observer {
 
         String inp=myObj.nextLine();
         if(inp.equals("0")){
-            System.out.println("Quantos jogadores quer no seu lobby escolha entre 2 a 4");
-            int nr_jogadores= myObj.nextInt();
-            System.out.println("Nivel de jogo entre 1 a 10");// Mapa SmallVs or FourCorners
-            int nivel_jogo= myObj.nextInt();
+            System.out.println("Escolher Mapa:\n1-SmallVs\t2-FourCorners");
+            int mapa = myObj.nextInt(); // get the map selection
+            int nr_jogadores;
+
+            if (mapa == 1) { // SmallVs
+                nr_jogadores = 2;
+                map="C:\\Users\\olaso\\IdeaProjects\\Projeto_SD_RabbitMQ\\maps\\SmallVs.txt";
+            } else if (mapa == 2) { // FourCorners
+                nr_jogadores = 4;
+                map="C:\\Users\\olaso\\IdeaProjects\\Projeto_SD_RabbitMQ\\maps\\FourCorners.txt";
+            } else {
+                System.out.println("Invalid selection");
+                return; // or handle this scenario as you see fit
+            }
 
             this.donoLobby=this.user;
-            this.nivelJogo=nivel_jogo;
-            //mapa
             this.jogadoresLobby.add(this.user);
 
             json.put("operation","Criar lobby");
             json.put("dono lobby",this.user);
+            json.put("mapa",map);       //path do mapa
             json.put("nr jogadores",nr_jogadores);
-            json.put("nivel jogo",nivel_jogo);
             this.channelToRabbitMq.exchangeDelete(queueName+ "client");
             this.channelToRabbitMq.queueDelete(queueName+"client");
             bindExchangeToChannelRabbitMQ(this.user);
@@ -120,15 +127,16 @@ public class Observer {
             json.put("operation","Enter lobby");
             json.put("lobby",donoLobby);
             json.put("user",this.user);
+            json.put("mapa", map); // Always include the map when a player enters the lobby
+            this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
             bindExchangeToChannelRabbitMQ(donoLobby);
             attachConsumerToChannelExchangeWithKey(donoLobby);
             this.sendMessage(json.toString());
-
         }
         json.clear();
         int opt=0;
         while(true) {
-            if (this.user.equals(this.donoLobby)) {
+            if (this.user.equals(this.donoLobby)) {                 //Lobby owner
                 System.out.println("1- Comecar Jogo");
                 System.out.println("2- Imprimir jogadores no lobby");
                 System.out.println("3- Sair");
@@ -149,7 +157,7 @@ public class Observer {
                         break;
                 }
 
-            } else {
+            } else {                                        //Lobby normal player
                 System.out.println("1- Imprimir jogadores no lobby");
                 System.out.println("2- Sair");
 
@@ -276,29 +284,37 @@ public class Observer {
                 this.messagerecived=true;
                 break;
             case "Enter lobby":
-                if(this.donoLobby.equals(json.getString("lobby"))){
                     JSONArray array = json.getJSONArray("jogadoresNoLobby");
+
                     for(int i=0; i<array.length(); i++){
                         if(!this.jogadoresLobby.contains(array.getString(i))){
                             this.jogadoresLobby.add(array.getString(i));
                         }
                     }
-                    this.nivelJogo=json.getInt("nivel");
+
+                if(json.has("mapa")) { // Check if the "mapa" field is present
+                    this.map=json.getString("mapa");
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
-                    if(json.getBoolean("comecar jogo")){
-                        this.Game=new Game();
-                        ThreadJogo run = new ThreadJogo(this.Game);
+
+                   /*if(json.getBoolean("comecar jogo")) {
+                        //this.Game.StartGame(map);
+                        System.out.println("Received boolean comecar jogo\nStarting game...");
+                        ThreadJogo run = new ThreadJogo(this.Game,map);
                         new Thread(run).start();
+                    }*/
+                }
+                break;
+
+            case "LETS START THE GAME":
+                if(json.has("mapa")) { // Check if the "mapa" field is present
+                    this.map=json.getString("mapa");
+                    if(json.getString("lobby").equals(this.donoLobby)){
+                        this.Game.StartGame(map);
                     }
                 }
                 break;
-            case "LETS START THE GAME":
-                if(json.getString("lobby").equals(this.donoLobby)){
-                    this.Game.rpcStartGame();
-                }
-                break;
-            /*case "MoveFrog":
+            /*case "MovePlayer":
                 if(this.donoLobby.equals(json.getString("lobby")))
                     this.Game.update_players(receivedMessage);
                 break;

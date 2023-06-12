@@ -6,14 +6,17 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class ThreadJogo extends UnicastRemoteObject implements Runnable {
     Game mainGame;
+    String map;
 
-    public ThreadJogo(Game main) throws RemoteException {
+    public ThreadJogo(Game main, String mapa) throws RemoteException {
+        super();
         this.mainGame = main;
+        this.map=mapa;
     }
 
     public void run() {
         try {
-            mainGame.rpcStartGame();
+            mainGame.StartGame(map);
         } catch (Exception e) {
             e.printStackTrace();
         }

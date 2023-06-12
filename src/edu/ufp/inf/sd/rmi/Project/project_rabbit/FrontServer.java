@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class FrontServer {
     private  static HashMap<String,ArrayList<String>> lobbys_and_players =new HashMap<>();// Nr de Lobby e o nome do jogador no lobby
-    private  static HashMap<String,Integer> lobbys_and_level =new HashMap<>();// Nr de Lobby e qts jogadores lá estão
+    private  static HashMap<String, String> lobbys_and_map =new HashMap<String, String>();// Nr de Lobby e qts jogadores lá estão
     private  static HashMap<String,Integer> lobbys_and_size =new HashMap<>();// Nr de Lobby e qts jogadores lá estão
 
 
@@ -61,7 +61,7 @@ public class FrontServer {
                 json.put("FrontServer","Sending message from FrontServer");
 
                 if(json.getString("operation").equals("ServerOn")){
-                    json.put("info","pega la a info");
+                    json.put("info","Server is ON");
                     getInfo1(json);
                     AMQP.BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
                     channelToServers.basicPublish(exchangeName+"server","",prop,json.toString().getBytes("UTF-8"));
@@ -91,18 +91,18 @@ public class FrontServer {
         switch (operation){
             case "Criar lobby":
                 String donoLobby = json.getString("dono lobby");
+                String mapa = json.getString("mapa");
                 int nrJogadores = json.getInt("nr jogadores");
-                int nivelJogo = json.getInt("nivel jogo");
                 System.out.println("FrontServer | " + donoLobby+ " criou novo lobby");
 
                 ArrayList<String> playersNoLobby = new ArrayList<>();
                 playersNoLobby.add(donoLobby);
                 lobbys_and_players.put(donoLobby,playersNoLobby);
-                lobbys_and_level.put(donoLobby,nivelJogo);
+                lobbys_and_map.put(donoLobby,mapa);
                 lobbys_and_size.put(donoLobby,nrJogadores);
                 System.out.println("Criei um novo lobby:" + lobbys_and_players);
                 break;
-            case "Enter lobby":
+           /* case "Enter lobby":
                 String lobby = json.getString("lobby");
                 String user = json.getString("user");
                 System.out.println("FrontServer | "+user + " entrou no lobby do " + lobby);
@@ -112,13 +112,45 @@ public class FrontServer {
                 }
                 System.out.println("Jogador "+ user+" entrou no lobby "+lobby+":" + lobbys_and_players);
                 break;
+            */
+            case "Enter lobby":
+                String lobbyID = json.getString("lobby");
+                String user = json.getString("user");
+                System.out.println("FrontServer | "+user + " entrou no lobby" + lobbyID);
+
+                // Convert lobby ID to lobby name
+                ArrayList<String> lobbyNames = new ArrayList<>(lobbys_and_players.keySet());
+                int lobbyIndex;
+                try {
+                    lobbyIndex = Integer.parseInt(lobbyID) - 1;
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid lobby ID: " + lobbyID);
+                    throw new RuntimeException("Invalid lobby ID: " + lobbyID);
+                }
+                if (lobbyIndex < 0 || lobbyIndex >= lobbyNames.size()) {
+                    System.out.println("Lobby ID out of range: " + lobbyID);
+                    throw new RuntimeException("Lobby ID out of range: " + lobbyID);
+                }
+                String lobbyName = lobbyNames.get(lobbyIndex);
+
+                // Use lobbyName instead of lobby
+                ArrayList<String> players = lobbys_and_players.get(lobbyName);
+                if (players == null) {
+                    players = new ArrayList<>();
+                    lobbys_and_players.put(lobbyName, players);
+                }
+                if(!players.contains(user)){
+                    players.add(user);
+                }
+                System.out.println("Jogador "+ user+" entrou no lobby :"+ lobbys_and_players);
+                break;
 
         }
     }
 
     public static void getInfo1(JSONObject json){
         ArrayList<String> lobbynames = new ArrayList<>();
-        ArrayList<Integer> lobbylvls = new ArrayList<>();
+        ArrayList<String> lobbymap = new ArrayList<>();
         ArrayList<Integer> lobbysizes = new ArrayList<>();
         ArrayList<String> players;
         int j=0;
@@ -131,10 +163,10 @@ public class FrontServer {
         json.put("lobbys",lobbynames);
 
         for (int i=0;i<lobbynames.size();i++){
-           lobbylvls.add(lobbys_and_level.get(lobbynames.get(i)));
+           lobbymap.add(lobbys_and_map.get(lobbynames.get(i)));
            lobbysizes.add(lobbys_and_size.get(lobbynames.get(i)));
         }
-        json.put("lvl",lobbylvls);
+        json.put("mapa",lobbymap);
         json.put("size",lobbysizes);
 
     }

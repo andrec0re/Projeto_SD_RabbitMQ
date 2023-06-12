@@ -57,7 +57,7 @@ public class ObserverGuiClient extends JFrame {
         if(Objects.equals(user, "")){
             System.out.println("oi");
         }
-        //2. Create the _05_observer object that manages send/receive of messages to/from rabbitmq
+        //2. Create the _05_observer object that manaFges send/receive of messages to/from rabbitmq
         this.observer = new Observer(this, host, port, "guest", "guest", exchangeName,queue,queueFrontServer, BuiltinExchangeType.FANOUT, "UTF-8", user);
 
 
