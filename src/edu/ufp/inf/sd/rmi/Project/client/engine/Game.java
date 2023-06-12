@@ -75,6 +75,7 @@ public class Game extends JFrame {
 
 	public static String workQueueName = UUID.randomUUID().toString();
 	public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
+	private ArrayList<String> players;
 
 	/**e definido os estados possiveis para o modo de jogo **/
 
@@ -113,7 +114,7 @@ public class Game extends JFrame {
 	}
 
 
-	public Game(String map_name, ObserverRI observer) throws RemoteException {
+	public Game(String map_name, ArrayList<String> players) throws RemoteException {
 		super (name);
 
 		//Default Settings of the JFrame
@@ -139,8 +140,8 @@ public class Game extends JFrame {
 		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
 		//gui.LoginScreen();
 		//save.LoadSettings();
+		this.players = players;
 		this.StartGame(map_name);
-		//observerRI=observer;
 		GameLoop();
 	}
 

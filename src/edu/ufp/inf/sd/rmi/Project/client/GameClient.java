@@ -206,7 +206,7 @@ public class GameClient {
             scanner.nextLine();
         }
 
-        new_game = new Game(map, observerRI);
+        //new_game = new Game(map, observerRI);
     }
 
 
@@ -236,7 +236,7 @@ public class GameClient {
             scanner.nextLine();
         }
         String mapa = observerRI.getSubjectRI().getMapname();
-        new_game = new Game(mapa, observerRI);              //same game lobby
+        //new_game = new Game(mapa, observerRI);              //same game lobby
     }
 
 }

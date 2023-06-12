@@ -297,12 +297,13 @@ public class Observer {
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
-                   /*if(json.getBoolean("comecar jogo")) {
+                  if(json.getBoolean("comecar jogo")) {
                         //this.Game.StartGame(map);
-                        System.out.println("Received boolean comecar jogo\nStarting game...");
-                        ThreadJogo run = new ThreadJogo(this.Game,map);
+                        System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
+                       System.out.println("Mapa "+this.map);
+                       ThreadJogo run = new ThreadJogo(this.Game,this.jogadoresLobby,this.map);
                         new Thread(run).start();
-                    }*/
+                    }
                 }
                 break;
 
