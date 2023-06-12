@@ -4,8 +4,6 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.rmi.RemoteException;
 import javax.swing.JButton;
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
 
@@ -61,7 +59,7 @@ public class Pause implements ActionListener {
 			MenuHandler.CloseMenu();
 			//Game.btl.EndTurn();
 			try {
-				String message = Game.u + ";" + "endturn";
+				String message = Game.username + ";" + "endturn";
 				Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 			} catch (IOException er){
 				er.printStackTrace();

@@ -61,7 +61,7 @@ public class Observer {
     public Game Game;
     public String donoLobby="";
     public int nr_jogadores=0;
-    public Boolean maxPlayersReached=false;
+    public boolean startGame = false;
 
     //Store received message to be get by gui
     private String receivedMessage;
@@ -130,8 +130,8 @@ public class Observer {
             json.put("user",this.user);
             json.put("mapa", map); // Always include the map when a player enters the lobby
             this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
-            bindExchangeToChannelRabbitMQ(this.user);
-            attachConsumerToChannelExchangeWithKey(this.user);
+            bindExchangeToChannelRabbitMQ(donoLobby);
+            attachConsumerToChannelExchangeWithKey(donoLobby);
             this.sendMessage(json.toString());
         }
         //json.clear();
@@ -140,44 +140,48 @@ public class Observer {
             if (this.user.equals(this.donoLobby)) { // Lobby owner
                 System.out.println("1- Comecar Jogo");
                 System.out.println("2- Imprimir jogadores no lobby");
-                System.out.println("3- Sair");
+                //System.out.println("3- Sair");
                 opt = myObj.nextInt();
                 switch (opt) {
                     case 1:
-                        json.put("type", "Comecar Jogo");
+                        json.put("type", "comecar jogo");
                         json.put("lobby", this.user);
                         json.put("mapa", this.map); // Include the value of this.map in the message
-                        sendMessage(json.toString());
-                        System.out.println("Mapa " + this.map);
-                        this.mapa = this.map; // Set the value of this.mapa
+                        this.sendMessage(json.toString());
+                        System.out.println("Player 1\n Mapa-"+this.map);
+                        startGame=true;
+                        // Lobby owner starts the game
                         ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
                         new Thread(run).start();
-                        maxPlayersReached = true; // Set maxPlayersReached to true
                         break;
                     case 2:
                         System.out.println(this.printMeuLobby());
                         break;
+                    /*case 3:
+                        return;*/
                     default:
                         System.out.println("Opcao invalida");
                         break;
                 }
             } else { // Lobby normal player
+
                 System.out.println("1- Imprimir jogadores no lobby");
                 System.out.println("2- Sair");
-                System.out.println("3- Start Game");
+                System.out.println("3- Start game");
                 opt = myObj.nextInt();
                 switch (opt) {
                     case 1:
                         System.out.println(this.printMeuLobby());
                         break;
                     case 2:
+                        System.out.println("Leaving...\n");
                         return;
                     case 3:
-                        if (this.mapa != null) { // Check if the value of this.mapa is not null
-                            System.out.println("Mapa " + this.mapa);
-                            ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.mapa); // Use this.mapa instead of this.map
-                            new Thread(run).start();
-                        }
+                        System.out.println("Starting game...");
+                        System.out.println("Mapa: " + this.mapa);
+                        System.out.println("Lobby: " + this.jogadoresLobby);
+                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
+                        new Thread(run).start();
                         break;
                     default:
                         System.out.println("Opcao invalida");
@@ -187,14 +191,6 @@ public class Observer {
         }
 
 
-
-//            this.Game=new Game(this.position,nr_jogadores,this);
-//            while (true){
-//                System.out.println("SIZE DO ARRAY:"+NR_de_players_no_meu_lobby);
-//                System.out.println("SIZE PARA COMEÇAR:"+this.nr_jogadores);
-//                if (this.NR_de_players_no_meu_lobby==this.nr_jogadores)break;
-//            }
-//            this.Game.run();
     }
 
     private String printMeuLobby() {
@@ -285,8 +281,10 @@ public class Observer {
      */
     public void setReceivedMessage(String receivedMessage) throws IOException {
         System.out.println("Mensagem recebida dos servidores : " + receivedMessage);
+        this.receivedMessage = receivedMessage; // Set the value of receivedMessage
         JSONObject json = new JSONObject(receivedMessage);
         String operation = json.getString("operation");
+
         switch (operation){
             case "GETLOBBYS":
                 if(this.user.equals(json.getString("user"))){
@@ -295,26 +293,27 @@ public class Observer {
                 this.messagerecived=true;
                 break;
             case "Enter lobby":
-                    JSONArray array = json.getJSONArray("jogadoresNoLobby");
+                JSONArray array = json.getJSONArray("jogadoresNoLobby");
 
-                    for(int i=0; i<array.length(); i++){
-                        if(!this.jogadoresLobby.contains(array.getString(i))){
-                            this.jogadoresLobby.add(array.getString(i));
-                        }
+                for (int i = 0; i < array.length(); i++) {
+                    String playerName = array.getString(i);
+                    if (!this.jogadoresLobby.contains(playerName)) {
+                        this.jogadoresLobby.add(playerName);
                     }
+                }
 
-                if(json.has("mapa")) { // Check if the "mapa" field is present
-                    this.map=json.getString("mapa");
+                if (json.has("mapa")) { // Check if the "mapa" field is present
+                    this.map = json.getString("mapa");
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
-                  /*if(json.getBoolean("comecar jogo")) {
+                    if (json.getBoolean("comecar jogo")) {
                         //this.Game.StartGame(map);
                         System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
-                       System.out.println("Mapa "+this.map);
-                       ThreadJogo run = new ThreadJogo(this.Game,this.jogadoresLobby,this.map);
+                        System.out.println("Mapa " + this.map);
+                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
                         new Thread(run).start();
-                    }*/
+                    }
                 }
                 break;
 
@@ -326,13 +325,13 @@ public class Observer {
                     }
                 }
                 break;
-            /*case "MovePlayer":
+            case "MovePlayer":
                 if(this.donoLobby.equals(json.getString("lobby")))
-                    this.Game.update_players(receivedMessage);
-                break;
-            */
+                    this.Game.handleState(receivedMessage);
+                    break;
         }
     }
+
 
     private int getID() {
         for(int i=0;i<this.jogadoresLobby.size();i++){

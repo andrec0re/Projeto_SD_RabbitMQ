@@ -6,10 +6,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.UnsupportedEncodingException;
-import java.rmi.RemoteException;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * Keyboard handling for the game along with the mouse setup for game handling.
@@ -61,27 +58,27 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 				edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
 
 				if (i == up) {
-					String message = Game.u + ";" + "up";
+					String message = Game.username + ";" + "up";
 					System.out.println(" [x] Sent '" + message + "'");
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 				} else if (i == down) {
-					String message = Game.u + ";" + "down";
+					String message = Game.username + ";" + "down";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == left) {
-					String message = Game.u + ";" + "left";
+					String message = Game.username + ";" + "left";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == right) {
-					String message = Game.u + ";" + "right";
+					String message = Game.username + ";" + "right";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == select) {
-					String message = Game.u + ";" + "select";
+					String message = Game.username + ";" + "select";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == cancel) {
-					String message = Game.u + ";" + "cancel";
+					String message = Game.username + ";" + "cancel";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == start) {
@@ -95,27 +92,27 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		try {
 			if (Game.GameState==Game.State.EDITOR) {
 				if (i == up) {
-					String message = Game.u + ";" + "up";
+					String message = Game.username + ";" + "up";
 					System.out.println(" [x] Sent '" + message + "'");
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 				} else if (i == down) {
-					String message = Game.u + ";" + "down";
+					String message = Game.username + ";" + "down";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == left) {
-					String message = Game.u + ";" + "left";
+					String message = Game.username + ";" + "left";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == right) {
-					String message = Game.u + ";" + "right";
+					String message = Game.username + ";" + "right";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == select) {
-					String message = Game.u + ";" + "select";
+					String message = Game.username + ";" + "select";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == cancel) {
-					String message = Game.u + ";" + "cancel";
+					String message = Game.username + ";" + "cancel";
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} else if (i == start) {

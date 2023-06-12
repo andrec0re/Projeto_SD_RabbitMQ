@@ -176,6 +176,7 @@ public class ObserverServer {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.toString());
         }
     }
+
     public void syncServers(String receivedMessage){
         System.out.println("Mensagens recebidas entre servers:" + receivedMessage);
 
@@ -202,7 +203,6 @@ public class ObserverServer {
                 System.out.println("Criei um novo lobby:" + this.lobbys_and_players);
                 break;
             case "Enter lobby":
-                //System.out.println("entrei nos lobbys");
                 String lobbyID = json.getString("lobby");
                 String user = json.getString("user");
 
@@ -225,9 +225,8 @@ public class ObserverServer {
                 if (!this.lobbys_and_players.get(lobbyName).contains(user)) {
                     this.lobbys_and_players.get(lobbyName).add(user);
                 }
-                System.out.println("Jogador "+ user+" entrou no lobby :"+ this.lobbys_and_players);
+                System.out.println("Jogador " + user + " entrou no lobby: " + this.lobbys_and_players);
                 break;
-
             case "ServerOn":
                 if(!state){
 
@@ -355,16 +354,17 @@ public class ObserverServer {
                     throw new RuntimeException("Lobby " + lobbyName + " does not exist.");
                 } else {
                     if (!players.contains(user)) {
-                        players.add(user);          //add user
+                        players.add(user);
                         System.out.println(user + " entrou no lobby do " + lobbyName);
-                        json.put("jogadoresNoLobby", players);
-                        json.put("mapa", this.lobbys_and_map.get(lobbyName));
-                        json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
-                        sendMessage(json.toString(), lobbyName);
-                        sendMessageToServers(receivedMessage);
                     } else {
                         System.out.println("User " + user + " is already in the lobby " + lobbyName);
                     }
+                    json.put("lobby", lobbyName);
+                    json.put("jogadoresNoLobby", players);
+                    json.put("mapa", this.lobbys_and_map.get(lobbyName));
+                    json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
+                    sendMessage(json.toString(), "client");
+                    sendMessageToServers(receivedMessage);
                 }
                 break;
 

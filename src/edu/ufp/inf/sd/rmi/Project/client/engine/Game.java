@@ -15,6 +15,8 @@ import java.util.UUID;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Game extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -69,12 +71,10 @@ public class Game extends JFrame {
 	public static int cmd; // commander selected by client
 
 	public static Channel chan;
-	public static String u; // username
-	public static String lobbyID;
+	public static String username; // username
 	public static String fanoutExchangeName;
 
 	public static String workQueueName = UUID.randomUUID().toString();
-	public static String rpcStartGameGui = "rpc-start-game-gui-"; // name of the gui rpc
 	private ArrayList<String> players;
 
 	/**e definido os estados possiveis para o modo de jogo **/
@@ -196,58 +196,7 @@ public class Game extends JFrame {
 	}
 
 
-	public void rpcStartGame() {
-		try {
-			System.out.println("Declaring RPC [" + Game.rpcStartGameGui + "]");
-			chan.queueDeclare(Game.rpcStartGameGui, false, false, false, null);
-			chan.queuePurge(rpcStartGameGui);
-
-			chan.basicQos(1);
-
-			DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-				AMQP.BasicProperties replyProps = new AMQP.BasicProperties
-						.Builder()
-						.correlationId(delivery.getProperties().getCorrelationId())
-						.build();
-				String response = "";
-
-				try {
-					String []args = new String(delivery.getBody(), "UTF-8").split(";");
-					System.out.println("Received [x] " + args[1]);
-
-					String mapname = args[0];
-					// cmds will be picked here from args[1]
-					Game.workQueueName = args[1];
-					Game.fanoutExchangeName = args[2];
-
-					boolean[] npc = { false, false, false, false }; // since it's a multiplayer game, no npc are necessary
-
-					int[] cmds = new int[4];
-
-					// start listening to server incoming messages
-					// Once a player makes a move, the command will
-					// be sent to the server to get consumed
-					Game.consumeFromServer();
-
-					MenuHandler.CloseMenu();
-					Game.btl.NewGame(mapname);
-					Game.btl.AddCommanders(cmds, npc, 100, 50);
-					Game.gui.InGameScreen();
-
-				} catch (RuntimeException e) {
-					System.out.println(" [.] " + e);
-				} finally {
-					Game.chan.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
-					Game.chan.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-				}
-			};
-			chan.basicConsume(Game.rpcStartGameGui, false, deliverCallback, (consumerTag -> {}));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void consumeFromServer() {
+	/*private static void consumeFromServer() {
 		try {
 			Game.chan.exchangeDeclare(Game.fanoutExchangeName, "fanout");
 			String queueName = chan.queueDeclare().getQueue();
@@ -260,9 +209,9 @@ public class Game extends JFrame {
 			};
 			chan.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
 		} catch (IOException e) {}
-	}
+	}*/
 
-	private static void handleState(String state) {
+	public void handleState(String state) {
 		if (Game.GameState == Game.State.PLAYING) {
 			edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
 			switch (state) {

@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.rmi.RemoteException;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -97,7 +96,7 @@ public class City implements ActionListener,ListSelectionListener {
 		} else if (s == Buy) {
 			if (Game.isOnline) {
 				try {
-					String message = Game.u + ";buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y;
+					String message = Game.username + ";buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y;
 					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} catch (Exception e1) {
