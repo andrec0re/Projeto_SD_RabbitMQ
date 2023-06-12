@@ -57,9 +57,11 @@ public class Observer {
     private String queueNameFrontServer;
 
     public String map;
+    public String mapa;
     public Game Game;
     public String donoLobby="";
-    public int mapa;
+    public int nr_jogadores=0;
+    public Boolean maxPlayersReached=false;
 
     //Store received message to be get by gui
     private String receivedMessage;
@@ -96,13 +98,12 @@ public class Observer {
         if(inp.equals("0")){
             System.out.println("Escolher Mapa:\n1-SmallVs\t2-FourCorners");
             int mapa = myObj.nextInt(); // get the map selection
-            int nr_jogadores;
 
             if (mapa == 1) { // SmallVs
-                nr_jogadores = 2;
+               this.nr_jogadores = 2;
                 map="C:\\Users\\olaso\\IdeaProjects\\Projeto_SD_RabbitMQ\\maps\\SmallVs.txt";
             } else if (mapa == 2) { // FourCorners
-                nr_jogadores = 4;
+                this.nr_jogadores = 4;
                 map="C:\\Users\\olaso\\IdeaProjects\\Projeto_SD_RabbitMQ\\maps\\FourCorners.txt";
             } else {
                 System.out.println("Invalid selection");
@@ -129,14 +130,14 @@ public class Observer {
             json.put("user",this.user);
             json.put("mapa", map); // Always include the map when a player enters the lobby
             this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
-            bindExchangeToChannelRabbitMQ(donoLobby);
-            attachConsumerToChannelExchangeWithKey(donoLobby);
+            bindExchangeToChannelRabbitMQ(this.user);
+            attachConsumerToChannelExchangeWithKey(this.user);
             this.sendMessage(json.toString());
         }
-        json.clear();
+        //json.clear();
         int opt=0;
-        while(true) {
-            if (this.user.equals(this.donoLobby)) {                 //Lobby owner
+        while (true) {
+            if (this.user.equals(this.donoLobby)) { // Lobby owner
                 System.out.println("1- Comecar Jogo");
                 System.out.println("2- Imprimir jogadores no lobby");
                 System.out.println("3- Sair");
@@ -145,37 +146,47 @@ public class Observer {
                     case 1:
                         json.put("type", "Comecar Jogo");
                         json.put("lobby", this.user);
+                        json.put("mapa", this.map); // Include the value of this.map in the message
                         sendMessage(json.toString());
+                        System.out.println("Mapa " + this.map);
+                        this.mapa = this.map; // Set the value of this.mapa
+                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
+                        new Thread(run).start();
+                        maxPlayersReached = true; // Set maxPlayersReached to true
                         break;
-
                     case 2:
                         System.out.println(this.printMeuLobby());
-
                         break;
                     default:
                         System.out.println("Opcao invalida");
                         break;
                 }
-
-            } else {                                        //Lobby normal player
+            } else { // Lobby normal player
                 System.out.println("1- Imprimir jogadores no lobby");
                 System.out.println("2- Sair");
-
+                System.out.println("3- Start Game");
                 opt = myObj.nextInt();
                 switch (opt) {
                     case 1:
                         System.out.println(this.printMeuLobby());
                         break;
-
                     case 2:
                         return;
+                    case 3:
+                        if (this.mapa != null) { // Check if the value of this.mapa is not null
+                            System.out.println("Mapa " + this.mapa);
+                            ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.mapa); // Use this.mapa instead of this.map
+                            new Thread(run).start();
+                        }
+                        break;
                     default:
                         System.out.println("Opcao invalida");
                         break;
                 }
-
             }
         }
+
+
 
 //            this.Game=new Game(this.position,nr_jogadores,this);
 //            while (true){
@@ -272,7 +283,7 @@ public class Observer {
     /**
      * @param receivedMessage the receivedMessage to set
      */
-    public void setReceivedMessage(String receivedMessage) throws RemoteException {
+    public void setReceivedMessage(String receivedMessage) throws IOException {
         System.out.println("Mensagem recebida dos servidores : " + receivedMessage);
         JSONObject json = new JSONObject(receivedMessage);
         String operation = json.getString("operation");
@@ -297,13 +308,13 @@ public class Observer {
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
-                  if(json.getBoolean("comecar jogo")) {
+                  /*if(json.getBoolean("comecar jogo")) {
                         //this.Game.StartGame(map);
                         System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
                        System.out.println("Mapa "+this.map);
                        ThreadJogo run = new ThreadJogo(this.Game,this.jogadoresLobby,this.map);
                         new Thread(run).start();
-                    }
+                    }*/
                 }
                 break;
 
