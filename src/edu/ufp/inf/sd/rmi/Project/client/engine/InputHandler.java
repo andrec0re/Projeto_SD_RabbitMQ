@@ -69,7 +69,7 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 				json.put("user", Game.username);
 
 				if (i == up) {
-					System.out.println("User= "+Game.username+"\n Move= "+up);
+					System.out.println("User= "+Game.username+"\n Move=up");
 					json.put("move","up");		// "up" received in Game.movePlayers() and moves player
 					Game.observer.sendMessage(json.toString());
 				} else if (i == down) {

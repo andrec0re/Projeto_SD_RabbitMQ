@@ -3,6 +3,7 @@ package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.*;
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.Project.client.menus.MenuHandler;
 import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -63,6 +64,7 @@ public class Observer {
     public String donoLobby="";
     public int nr_jogadores=0;
     public boolean startGame = false;
+    public Boolean duplicated=false;
 
     //Store received message to be get by gui
     private String receivedMessage;
@@ -132,6 +134,7 @@ public class Observer {
             json.put("dono lobby",this.user);
             json.put("mapa",map);       //path do mapa
             json.put("nr jogadores",nr_jogadores);
+            this.setTurn(true); //1st player starts to play
             this.channelToRabbitMq.exchangeDelete(queueName+ "client");
             this.channelToRabbitMq.queueDelete(queueName+"client");
             bindExchangeToChannelRabbitMQ("client");
@@ -153,12 +156,12 @@ public class Observer {
         int opt=0;
         while (true) {
             if (this.user.equals(this.donoLobby)) { // Lobby owner
-                System.out.println("1- Comecar Jogo");
+                //System.out.println("1- Comecar Jogo");
                 System.out.println("2- Imprimir jogadores no lobby");
                 System.out.println("3- Sair");
                 opt = myObj.nextInt();
                 switch (opt) {
-                    case 1:
+                    /*case 1:
                         json.put("type", "comecar jogo");
                         json.put("lobby", this.user);
                         json.put("mapa", this.map); // Include the value of this.map in the message
@@ -166,11 +169,11 @@ public class Observer {
                         System.out.println("Player 1\n Mapa-"+this.map);
                         startGame=true;
                         // Lobby owner starts the game
-                        this.Game = new Game(this.map, this.user,this);
-                        //ThreadJogo run = new ThreadJogo(this.Game, this.user, this.map,this);
-                        ThreadJogo run = new ThreadJogo(this.Game);
+                        //this.Game = new Game(this.map, this.user,this);
+                        ThreadJogo run = new ThreadJogo(this.user, this.map,this);
+                        //ThreadJogo run = new ThreadJogo(this.Game);
                         new Thread(run).start();
-                        break;
+                        break; */
                     case 2:
                         System.out.println(this.printMeuLobby());
                         break;
@@ -243,7 +246,7 @@ public class Observer {
 
             /* TODO: Create binding: tell exchange to send messages to a queue; fanout exchange ignores the last parameter (binding key) */
             String routingKey = "";
-            channelToRabbitMq.queueBind(queueName,this.exchangeName,routingKey);
+            channelToRabbitMq.queueBind(queueName,"client",routingKey);
             channelToRabbitMq.queuePurge(queueName);
 
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created consumerChannel bound to Exchange " + this.exchangeName + "...");
@@ -294,44 +297,18 @@ public class Observer {
     }
 
 
-    private void consumeMessagesFromQueue() {
-        try {
-            // Use the stored queue name
-            String queueName = this.queueName;
-
-            // Create a new channel for consuming messages
-            Channel channel = channelToRabbitMqFrontServer.getConnection().createChannel();
-
-            // Create a new consumer
-            Consumer consumer = new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    String message = new String(body, StandardCharsets.UTF_8);
-                    setReceivedMessage(message);
-
-                    // Notify the GUI about the new message arrival
-                    gui.updateUser();
-                }
-            };
-
-            // Start consuming messages from the queue
-            channel.basicConsume(queueName, true, consumer);
-            System.out.println("Consuming from queue\n");
-        } catch (IOException e) {
-            // Handle any exceptions that may occur
-        }
-    }
-
-
     /**
      * @param receivedMessage the receivedMessage to set
      */
     public void setReceivedMessage(String receivedMessage) throws IOException {
-        System.out.println("Mensagem recebida dos servidores : " + receivedMessage);
+        System.out.println("Mensagem recebida do servidor : " + receivedMessage);
         this.receivedMessage = receivedMessage; // Set the value of receivedMessage
         JSONObject json = new JSONObject(receivedMessage);
         String operation = json.getString("operation");
-
+        if(duplicated) {
+            duplicated = false;
+            return;
+        }
         switch (operation){
             case "GETLOBBYS":
                 if(this.user.equals(json.getString("user"))){
@@ -354,33 +331,99 @@ public class Observer {
                     System.out.println(json.getString("user") + " entrou no lobby.");
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
-                    if (json.getBoolean("comecar jogo")) {
+                    if (json.getBoolean("comecar jogo") && !startGame) {
                         System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
                         System.out.println("Mapa " + this.map);
-                        this.Game = new Game(this.map, this.user,this);
-                        //ThreadJogo run = new ThreadJogo(this.Game, this.user, this.map,this);
-                        ThreadJogo run = new ThreadJogo(this.Game);
+                        //this.Game = new Game(this.map, this.user,this);
+                        ThreadJogo run = new ThreadJogo(this.user, this.map,this);
+                        //ThreadJogo run = new ThreadJogo(this.Game);
                         new Thread(run).start();
+                        this.Game=run.getMainGame();
+                        startGame=true;
                     }
                 }
                 break;
 
             case "LETS START THE GAME":
-                if(json.has("mapa")) { // Check if the "mapa" field is present
-                    this.map=json.getString("mapa");
-                    this.Game.StartGame(map);
-
-                }
+                //if(json.has("mapa")) { // Check if the "mapa" field is present
+                    //this.map=json.getString("mapa");
+                    //this.Game.StartGame(map);
+                //}
                 break;
 
             case "MovePlayer":
-                System.out.println("ENTREI MOVEPLAYER USER\n");
-                json.put("user", json.getString("user"));
-                json.put("move", json.getString("move"));
-                this.Game.movePlayers(receivedMessage);
-                break;
+                if(!duplicated) {
+                    System.out.println("ENTREI MOVEPLAYER USER\n");
+                    json.put("user", json.getString("user"));
+                    json.put("move", json.getString("move"));
+                    // this.Game.movePlayers(json.getString("user"),json.getString("move"));
+                    movePlayers(json.getString("user"), json.getString("move"));
+                    duplicated = true;
+                    break;
+                }
+
+            /*case "TestMessage":
+                System.out.println("Received test message: " + json.getString("message"));
+                break;*/
         }
     }
+
+
+    public void movePlayers(String user,String move) {
+        System.out.println("Entrei Move Players!");
+        if (edu.ufp.inf.sd.rmi.Project.client.engine.Game.GameState == edu.ufp.inf.sd.rmi.Project.client.engine.Game.State.PLAYING) {
+            edu.ufp.inf.sd.rmi.Project.client.players.Base ply = edu.ufp.inf.sd.rmi.Project.client.engine.Game.player.get(edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.currentplayer);
+
+            //JSONObject json = new JSONObject(user);
+            //String user = json.getString("user");
+            switch (move) {
+                case "up":
+                    ply.selecty--;
+                    if (ply.selecty < 0) {
+                        ply.selecty++;
+                    }
+                    break;
+                case "down":
+                    ply.selecty++;
+                    if (ply.selecty >= edu.ufp.inf.sd.rmi.Project.client.engine.Game.map.height) {
+                        ply.selecty--;
+                    }
+                    break;
+                case "left":
+                    ply.selectx--;
+                    if (ply.selectx < 0) {
+                        ply.selectx++;
+                    }
+                    break;
+                case "right":
+                    ply.selectx++;
+                    if (ply.selectx >= edu.ufp.inf.sd.rmi.Project.client.engine.Game.map.width) {
+                        ply.selectx--;
+                    }
+                    break;
+                case "select":
+                    edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.Action();
+                    break;
+                case "cancel":
+                    edu.ufp.inf.sd.rmi.Project.client.engine.Game.player.get(edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.currentplayer).Cancle();
+                    break;
+                case "start":
+                    new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(this);
+                    break;
+                case "endturn":
+                    MenuHandler.CloseMenu();
+                    edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.EndTurn();
+                    break;
+                default:
+                    String[] params = move.split(":");
+                    edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.Buyunit(Integer.parseInt(params[1]),
+                            Integer.parseInt(params[2]),
+                            Integer.parseInt(params[3]));
+                    MenuHandler.CloseMenu();
+            }
+        }
+    }
+
 
 
     private int getID() {
@@ -392,4 +435,7 @@ public class Observer {
     }
 
 
+    public void setGame(Game mainGame) {
+        this.Game=mainGame;
+    }
 }

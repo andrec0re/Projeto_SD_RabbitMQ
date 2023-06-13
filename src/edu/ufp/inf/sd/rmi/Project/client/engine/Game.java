@@ -241,61 +241,6 @@ public class Game extends JFrame {
 		} catch (IOException e) {}
 	}*/
 
-	public void movePlayers(String state) {
-		System.out.println("Entrei Move Players!");
-		if (Game.GameState == Game.State.PLAYING) {
-			edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
-
-			JSONObject json = new JSONObject(state);
-			String operation = json.getString("lobby");
-			//String user = json.getString("user");
-			switch (operation) {
-				case "up":
-					ply.selecty--;
-					if (ply.selecty < 0) {
-						ply.selecty++;
-					}
-					break;
-				case "down":
-					ply.selecty++;
-					if (ply.selecty >= Game.map.height) {
-						ply.selecty--;
-					}
-					break;
-				case "left":
-					ply.selectx--;
-					if (ply.selectx < 0) {
-						ply.selectx++;
-					}
-					break;
-				case "right":
-					ply.selectx++;
-					if (ply.selectx >= Game.map.width) {
-						ply.selectx--;
-					}
-					break;
-				case "select":
-					Game.btl.Action();
-					break;
-				case "cancel":
-					Game.player.get(Game.btl.currentplayer).Cancle();
-					break;
-				case "start":
-					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(observer);
-					break;
-				case "endturn":
-					MenuHandler.CloseMenu();
-					Game.btl.EndTurn();
-					break;
-				default:
-					String[] params = state.split(":");
-					Game.btl.Buyunit(Integer.parseInt(params[1]),
-							Integer.parseInt(params[2]),
-							Integer.parseInt(params[3]));
-					MenuHandler.CloseMenu();
-			}
-		}
-	}
 
 
 	public void StartGame(String map){

@@ -70,113 +70,113 @@ public class ObserverServer {
     /**
      * @param gui
      */
-    public void setServer(ServerGuiClient gui, String host, int port, String user, String pass, String exchangeName,String queueName,String queueNameFrontServer,BuiltinExchangeType exchangeType, String messageFormat) throws IOException, TimeoutException {
-        this.gui=gui;
-        this.exchangeName=exchangeName;
-        this.messageFormat=messageFormat;
-        this.exchangeType=exchangeType;
+        public void setServer(ServerGuiClient gui, String host, int port, String user, String pass, String exchangeName,String queueName,String queueNameFrontServer,BuiltinExchangeType exchangeType, String messageFormat) throws IOException, TimeoutException {
+            this.gui=gui;
+            this.exchangeName=exchangeName;
+            this.messageFormat=messageFormat;
+            this.exchangeType=exchangeType;
 
-        Connection connection=RabbitUtils.newConnection2Server(host, port, user, pass);
-        this.channelToRabbitMq=RabbitUtils.createChannel2Server(connection);
-        this.channelToRabbitMq_Servers=RabbitUtils.createChannel2Server(connection);
-        this.channelToRabbitMqFrontServer=RabbitUtils.createChannel2Server(connection);
-        this.channelToRabbitMqFrontServer.queueDeclare(queueNameFrontServer, false, false, false, null);
-
-
-        bindExchangeToChannelRabbitMQ();
-        attachConsumerToChannelExchangeWithKey();
-
-        JSONObject json = new JSONObject();
-        json.put("operation","ServerOn");
-        BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
-
-        channelToRabbitMqFrontServer.basicPublish("",queueNameFrontServer,prop,json.toString().getBytes("UTF-8"));
-//        sendMessageFrontServer(json.toString());
-
-        /* Declare a queue as Durable (queue won't be lost even if RabbitMQ restarts);
-            NB: RabbitMQ doesn't allow to redefine an existing queue with different
-            parameters, need to create a new one */
-        boolean durable = true;
-        //channel.queueDeclare(Send.QUEUE_NAME, false, false, false, null);
-        channelToRabbitMq.queueDeclare(queueNameFrontServer, false , false, false, null);
-        System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-            /* The server pushes messages asynchronously, hence we provide a DefaultConsumer callback
-            that will buffer the messages until ready to use them. */
-        //Set QoS: accept only one unacked message at a time; and force dispatch to next worker that is not busy.
-        int prefetchCount = 1;
-        channelToRabbitMq.basicQos(prefetchCount);
-
-        DeliverCallback deliverCallback=(consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println(" [x] Received '" + message + "'");
-            try {
-                setReceivedMessage(message);
-            } finally {
-                System.out.println(" [x] Done processing task");
-                //Worker must Manually ack each finalised task, hence, even if worker is killed
-                //(CTRL+C) while processing a message, nothing will be lost.
-                //Soon after the worker dies all unacknowledged messages will be redelivered.
-                //Ack must be sent on the same channel message it was received,
-                // otherwise raises exception (channel-level protocol exception).
-                channelToRabbitMq.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            }
-        };
-        //boolean autoAck = true; //When true disables "Manual message acknowledgments"
-        //Set flag=false for worker to send proper ack (once it is done with a task).
-        boolean autoAck = false;
-        //Register handler deliverCallback()
-        channelToRabbitMq.basicConsume(queueName, autoAck, deliverCallback, consumerTag -> { });
-    }
-
-    /**
-     * Declare exchange of specified type.
-     */
-    private void bindExchangeToChannelRabbitMQ() throws IOException {
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Declaring Exchange '" + this.exchangeName + "' with type " + this.exchangeType);
-
-        /* TODO: Declare exchange type  */
-        channelToRabbitMq_Servers.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT);
-    }
-
-    /**
-     * Creates a Consumer associated with an unnamed queue.
-     */
-    private void attachConsumerToChannelExchangeWithKey() {
-        try {
-            /* TODO: Create a non-durable, exclusive, autodelete queue with a generated name.
-                The string queueName will contain a random queue name (e.g. amq.gen-JzTY20BRgKO-HjmUJj0wLg) */
-            String queueName =  channelToRabbitMq_Servers.queueDeclare().getQueue();
+            Connection connection=RabbitUtils.newConnection2Server(host, port, user, pass);
+            this.channelToRabbitMq=RabbitUtils.createChannel2Server(connection);
+            this.channelToRabbitMq_Servers=RabbitUtils.createChannel2Server(connection);
+            this.channelToRabbitMqFrontServer=RabbitUtils.createChannel2Server(connection);
+            this.channelToRabbitMqFrontServer.queueDeclare(queueNameFrontServer, false, false, false, null);
 
 
-            /* TODO: Create binding: tell exchange to send messages to a queue; fanout exchange ignores the last parameter (binding key) */
-            String routingKey = "";
-            channelToRabbitMq_Servers.queueBind(queueName,exchangeName,routingKey);
-            channelToRabbitMq_Servers.queuePurge(queueName);
+            bindExchangeToChannelRabbitMQ();
+            attachConsumerToChannelExchangeWithKey();
 
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created SERVER_Channel bound to Exchange " + this.exchangeName + "...");
+            JSONObject json = new JSONObject();
+            json.put("operation","ServerOn");
+            BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
+
+            channelToRabbitMqFrontServer.basicPublish("",queueNameFrontServer,prop,json.toString().getBytes("UTF-8"));
+    //        sendMessageFrontServer(json.toString());
+
+            /* Declare a queue as Durable (queue won't be lost even if RabbitMQ restarts);
+                NB: RabbitMQ doesn't allow to redefine an existing queue with different
+                parameters, need to create a new one */
+            boolean durable = true;
+            //channel.queueDeclare(Send.QUEUE_NAME, false, false, false, null);
+            channelToRabbitMq.queueDeclare(queueNameFrontServer, false , false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+                /* The server pushes messages asynchronously, hence we provide a DefaultConsumer callback
+                that will buffer the messages until ready to use them. */
+            //Set QoS: accept only one unacked message at a time; and force dispatch to next worker that is not busy.
+            int prefetchCount = 1;
+            channelToRabbitMq.basicQos(prefetchCount);
 
             DeliverCallback deliverCallback=(consumerTag, delivery) -> {
-                String message=new String(delivery.getBody(), messageFormat);
-
-                //Store the received message
-//                System.out.println(" [x] SERVER Tag [" + consumerTag + "] - Received '" + message + "'");
-                syncServers(message);
-
-                // TODO: Notify the GUI about the new message arrive
-                gui.updateUser();
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+                try {
+                    setReceivedMessage(message);
+                } finally {
+                    System.out.println(" [x] Done processing task");
+                    //Worker must Manually ack each finalised task, hence, even if worker is killed
+                    //(CTRL+C) while processing a message, nothing will be lost.
+                    //Soon after the worker dies all unacknowledged messages will be redelivered.
+                    //Ack must be sent on the same channel message it was received,
+                    // otherwise raises exception (channel-level protocol exception).
+                    channelToRabbitMq.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
             };
-            CancelCallback cancelCallback=consumerTag -> {
-                System.out.println(" [x] SERVER Tag [" + consumerTag + "] - Cancel Callback invoked!");
-            };
-
-            // TODO: Consume with deliver and cancel callbacks
-            channelToRabbitMq_Servers.basicConsume(queueName,true,deliverCallback,cancelCallback);
-
-        } catch (Exception e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.toString());
+            //boolean autoAck = true; //When true disables "Manual message acknowledgments"
+            //Set flag=false for worker to send proper ack (once it is done with a task).
+            boolean autoAck = false;
+            //Register handler deliverCallback()
+            channelToRabbitMq.basicConsume(queueName, autoAck, deliverCallback, consumerTag -> { });
         }
-    }
+
+        /**
+         * Declare exchange of specified type.
+         */
+        private void bindExchangeToChannelRabbitMQ() throws IOException {
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Declaring Exchange '" + this.exchangeName + "' with type " + this.exchangeType);
+
+            /* TODO: Declare exchange type  */
+            channelToRabbitMq_Servers.exchangeDeclare(this.exchangeName, BuiltinExchangeType.FANOUT);
+        }
+
+        /**
+         * Creates a Consumer associated with an unnamed queue.
+         */
+        private void attachConsumerToChannelExchangeWithKey() {
+            try {
+                /* TODO: Create a non-durable, exclusive, autodelete queue with a generated name.
+                    The string queueName will contain a random queue name (e.g. amq.gen-JzTY20BRgKO-HjmUJj0wLg) */
+                String queueName =  channelToRabbitMq_Servers.queueDeclare().getQueue();
+
+
+                /* TODO: Create binding: tell exchange to send messages to a queue; fanout exchange ignores the last parameter (binding key) */
+                String routingKey = "";
+                channelToRabbitMq_Servers.queueBind(queueName,this.exchangeName,routingKey);
+                channelToRabbitMq_Servers.queuePurge(queueName);
+
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created SERVER_Channel bound to Exchange " + this.exchangeName + "...");
+
+                DeliverCallback deliverCallback=(consumerTag, delivery) -> {
+                    String message=new String(delivery.getBody(), messageFormat);
+
+                    //Store the received message
+    //                System.out.println(" [x] SERVER Tag [" + consumerTag + "] - Received '" + message + "'");
+                    syncServers(message);
+
+                    // TODO: Notify the GUI about the new message arrive
+                    gui.updateUser();
+                };
+                CancelCallback cancelCallback=consumerTag -> {
+                    System.out.println(" [x] SERVER Tag [" + consumerTag + "] - Cancel Callback invoked!");
+                };
+
+                // TODO: Consume with deliver and cancel callbacks
+                channelToRabbitMq_Servers.basicConsume(queueName,true,deliverCallback,cancelCallback);
+
+            } catch (Exception e) {
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.toString());
+            }
+        }
 
     public void syncServers(String receivedMessage) throws IOException {
         System.out.println("Mensagens recebidas entre servers:" + receivedMessage);
@@ -189,7 +189,7 @@ public class ObserverServer {
         }else{
             System.out.println(".........");
         }
-        System.out.println("JSON:"+json);
+        //System.out.println("JSON:"+json);
         switch (operation){
             case "Criar lobby":
                 //System.out.println("entrei criar lobby");
@@ -279,7 +279,7 @@ public class ObserverServer {
         BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
 
         // TODO: Publish message
-        channelToRabbitMq.basicPublish(this.exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
+        channelToRabbitMq.basicPublish("client",routingKey,prop,msgToSend.getBytes("UTF-8"));
     }
 
     public void sendMessageToServers(String msgToSend) throws IOException {
@@ -288,7 +288,7 @@ public class ObserverServer {
         BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
 
         // TODO: Publish message
-        channelToRabbitMq.basicPublish(exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
+        channelToRabbitMq.basicPublish(this.exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
 
     }
 
@@ -353,7 +353,8 @@ public class ObserverServer {
                         json.put("mapa", this.lobbys_and_map.get(lobbyName));
                         json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
                         sendMessage(json.toString());
-                        sendMessageToServers(receivedMessage);
+                        //sendMessageToServers(receivedMessage);
+                        //sendTestMessage();
                     }
                     break;
 
@@ -392,4 +393,17 @@ public class ObserverServer {
         }
         return lobbys.toString();
     }
+
+    public void sendTestMessage() {
+        JSONObject json = new JSONObject();
+        json.put("operation", "TestMessage");
+        json.put("message", "This is a test message from server.");
+        try {
+            sendMessage(json.toString());
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
