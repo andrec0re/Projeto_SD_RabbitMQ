@@ -13,6 +13,7 @@ import javax.swing.JTextArea;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
 
 /**
  * Displays a list of available edu.ufp.inf.sd.rmi.Project.client.units, and some information about them to buy.
@@ -35,8 +36,9 @@ public class City implements ActionListener,ListSelectionListener {
 	int x;
 	int y;
 	int[] ids = new int[Game.displayU.size()];
-	
-	public City(String Type, int xx, int yy) {
+	private Observer observer; // Add a member variable to store the Game instance
+
+	public City(String Type, int xx, int yy,Observer observer) {
 		//UnitModel.removeAllElements();
 		int a = 0;
 		for (int i = 0; i < Game.displayU.size(); i++) {
@@ -62,7 +64,9 @@ public class City implements ActionListener,ListSelectionListener {
 		SetBounds(size);
 		AddGui();
 		AddListeners();
+		this.observer = observer; // Store the Game instance
 	}
+
 	private void SetBounds(Point size) {
 		Main.setBounds(size.x, size.y, 150, 260);
 		Alt.setBounds(size.x+140 + 20, size.y, 320, 200);
@@ -90,6 +94,7 @@ public class City implements ActionListener,ListSelectionListener {
 
 
 	public void actionPerformed(ActionEvent e) {
+
 		Object s = e.getSource();
 		if (s == Return) {
 			MenuHandler.CloseMenu();
@@ -97,7 +102,7 @@ public class City implements ActionListener,ListSelectionListener {
 			if (Game.isOnline) {
 				try {
 					String message = Game.username + ";buy:" + ids[Units.getSelectedIndex()] + ":" + x + ":" + y;
-					Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
 					System.out.println(" [x] Sent '" + message + "'");
 				} catch (Exception e1) {
 					e1.printStackTrace();

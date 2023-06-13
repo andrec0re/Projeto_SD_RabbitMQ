@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import javax.swing.JButton;
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
 
 /**
  * This is the pause menu that is pulled up when you press the Enter button in game.
@@ -20,12 +21,14 @@ public class Pause implements ActionListener {
 	JButton EndTurn = new JButton("EndTurn");
 	JButton Resume = new JButton("Resume");
 	JButton Quit = new JButton("Quit");
-	
-	public Pause() {
+	private Observer observer;
+
+	public Pause(Observer observer) {
 		Point size = MenuHandler.PrepMenu(120,180);
 		SetBounds(size);
 		AddGui();
 		AddListeners();
+		this.observer=observer;
 	}
 	private void SetBounds(Point size) {
 		Resume.setBounds(size.x+10, size.y+10, 100, 24);
@@ -60,7 +63,7 @@ public class Pause implements ActionListener {
 			//Game.btl.EndTurn();
 			try {
 				String message = Game.username + ";" + "endturn";
-				Game.chan.basicPublish("", Game.workQueueName, null, message.getBytes("UTF-8"));
+				Game.observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
 			} catch (IOException er){
 				er.printStackTrace();
 			}

@@ -1,6 +1,7 @@
 package buildings;
 
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
 
 public class Base {
 	//Image and other info
@@ -25,7 +26,8 @@ public class Base {
 	//Location
 	public int x;
 	public int y;
-	
+	private Observer observer;
+
 	public Base(int owner,int xx, int yy) {
 		//15 = Neutral, 12~14 are unused. (12 max edu.ufp.inf.sd.rmi.Project.client.players)
 		System.out.println("Base level owner: " + owner);
@@ -38,7 +40,7 @@ public class Base {
 
 	public void OpenMenu() {
 		if (Menu!=null) {
-			new edu.ufp.inf.sd.rmi.Project.client.menus.City(Menu, x, y);
+			new edu.ufp.inf.sd.rmi.Project.client.menus.City(Menu, x, y,observer);
 		}
 	}
 	

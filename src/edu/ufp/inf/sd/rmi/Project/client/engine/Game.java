@@ -1,5 +1,6 @@
 package edu.ufp.inf.sd.rmi.Project.client.engine;
 
+import com.rabbitmq.client.BuiltinExchangeType;
 import edu.ufp.inf.sd.rmi.Project.client.ObserverRI;
 
 import java.awt.Dimension;
@@ -11,10 +12,13 @@ import java.util.List;
 import javax.swing.JFrame;
 import edu.ufp.inf.sd.rmi.Project.client.menus.MenuHandler;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.ObserverGuiClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -70,12 +74,12 @@ public class Game extends JFrame {
 	public static boolean isOnline = false;
 	public static int cmd; // commander selected by client
 
-	public static Channel chan;
+	//public static Channel chan;
 	public static String username; // username
-	public static String fanoutExchangeName;
+	public static Observer observer; // Declare an instance variable for Observer
+	public ObserverGuiClient observerGuiClient; // Declare an instance variable for ObserverGuiClient
 
 	public static String workQueueName = UUID.randomUUID().toString();
-	private ArrayList<String> players;
 
 	/**e definido os estados possiveis para o modo de jogo **/
 
@@ -94,6 +98,7 @@ public class Game extends JFrame {
 		setUndecorated(false);
 		setResizable(false);
 		setLocationRelativeTo(null);
+		//startObserver(observer);
 
 		//Creates all the edu.ufp.inf.sd.rmi.Project.client.gui elements and sets them up
 		gui = new Gui(this);
@@ -104,7 +109,7 @@ public class Game extends JFrame {
 		//load images, initialize the map, and adds the input settings.
 		load = new LoadImages();
 		map = new Map();
-		input = new InputHandler();
+		input = new InputHandler(observer);
 		list = new ListData();
 
 		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
@@ -114,7 +119,7 @@ public class Game extends JFrame {
 	}
 
 
-	public Game(String map_name, ArrayList<String> players) throws RemoteException {
+	public Game(String map_name, String username, Observer observer) throws RemoteException {
 		super (name);
 
 		//Default Settings of the JFrame
@@ -130,19 +135,44 @@ public class Game extends JFrame {
 		add(gui);
 		gui.setFocusable(true);
 		gui.requestFocusInWindow();
+		//startObserver(observer);
+		this.observer=observer;
 
 		//load images, initialize the map, and adds the input settings.
 		load = new LoadImages();
 		map = new Map();
-		input = new InputHandler();
+		input = new InputHandler(this.observer);
 		list = new ListData();
 
 		setVisible(true);//This has been moved down here so that when everything is done, it is shown.
 		//gui.LoginScreen();
 		//save.LoadSettings();
-		this.players = players;
+		this.username = username;
 		this.StartGame(map_name);
 		GameLoop();
+	}
+
+
+	public void startObserver(Observer observer) {
+		try {
+			// Provide the necessary parameters for the Observer constructor
+			String host = "localhost";
+			int port = 5672;
+			String user = "guest";
+			String pass = "guest";
+			String exchangeName = "my_exchange";
+			String queueName = "my_queue";
+			String queueFrontServer = "front_server_queue";
+			BuiltinExchangeType exchangeType = BuiltinExchangeType.FANOUT;
+			String messageFormat = "UTF-8";
+
+			// Create an instance of the Observer class
+			observer = new Observer(observerGuiClient, host, port, user, pass, exchangeName, queueName, queueFrontServer, exchangeType, messageFormat, username);
+			System.out.println("Observer criado!");
+			this.observer=observer;
+		} catch (IOException | TimeoutException | InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void GameLoop() {
@@ -211,10 +241,15 @@ public class Game extends JFrame {
 		} catch (IOException e) {}
 	}*/
 
-	public void handleState(String state) {
+	public void movePlayers(String state) {
+		System.out.println("Entrei Move Players!");
 		if (Game.GameState == Game.State.PLAYING) {
 			edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
-			switch (state) {
+
+			JSONObject json = new JSONObject(state);
+			String operation = json.getString("move");
+			String user = json.getString("user");
+			switch (operation) {
 				case "up":
 					ply.selecty--;
 					if (ply.selecty < 0) {
@@ -246,7 +281,7 @@ public class Game extends JFrame {
 					Game.player.get(Game.btl.currentplayer).Cancle();
 					break;
 				case "start":
-					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause();
+					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(observer);
 					break;
 				case "endturn":
 					MenuHandler.CloseMenu();
@@ -310,6 +345,6 @@ public class Game extends JFrame {
 
 	/**Starts a new game when launched.*/
 	public static void main(String args[]) throws Exception {
-		new Game();
+		//new Game();
 	}
 }

@@ -355,7 +355,7 @@ public class ObserverServer {
                 } else {
                     if (!players.contains(user)) {
                         players.add(user);
-                        System.out.println(user + " entrou no lobby do " + lobbyName);
+                        System.out.println(user + " entrou no lobby do " + lobbyID);
                     } else {
                         System.out.println("User " + user + " is already in the lobby " + lobbyName);
                     }
@@ -370,7 +370,12 @@ public class ObserverServer {
 
             case "LETS START THE GAME":
                 sendMessage(json.toString(), json.getString("lobby"));
-            case "MoveFrog":
+                break;
+            case "MovePlayer":
+                //String move = json.getString("move");
+                //String username = json.getString("user");
+                System.out.println("ENTREI MOVEPLAYER SERVER");
+                System.out.println("Lobby"+ json.getString("lobby") + "\n");
                 sendMessage(json.toString(), json.getString("lobby"));
                 break;
 

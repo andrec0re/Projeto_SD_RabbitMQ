@@ -1,6 +1,7 @@
 package edu.ufp.inf.sd.rmi.Project.client.buildings;
 
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
+import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
 
 public class Base {
 	//Image and other info
@@ -11,6 +12,17 @@ public class Base {
 	String desc = "Giggles";
 	public boolean Locked;//Easy determination if a unit is standing on it or not. TODO: Install this or do something.
 	public String Menu = "";//The menu this opens.
+
+	public Base(int owner, int xx, int yy) {
+		//15 = Neutral, 12~14 are unused. (12 max edu.ufp.inf.sd.rmi.Project.client.players)
+		System.out.println("Base level owner: " + owner);
+		this.owner=owner;
+		x=xx;
+		y=yy;
+		editorid = y * Game.map.width + x;
+		img=0;
+	}
+
 	enum Units {GROUND, AIR, WATER};
 	Units unittype = Units.GROUND;
 	
@@ -25,8 +37,9 @@ public class Base {
 	//Location
 	public int x;
 	public int y;
-	
-	public Base(int owner,int xx, int yy) {
+	private Observer observer; // Add a member variable to store the Game instance
+
+	public Base(int owner,int xx, int yy, Observer observer) {
 		//15 = Neutral, 12~14 are unused. (12 max edu.ufp.inf.sd.rmi.Project.client.players)
 		System.out.println("Base level owner: " + owner);
 		this.owner=owner;
@@ -34,11 +47,12 @@ public class Base {
 		y=yy;
 		editorid = y * Game.map.width + x;
 		img=0;
+		this.observer=observer;
 	}
 
 	public void OpenMenu() {
 		if (Menu!=null) {
-			new edu.ufp.inf.sd.rmi.Project.client.menus.City(Menu, x, y);
+			new edu.ufp.inf.sd.rmi.Project.client.menus.City(Menu, x, y,observer);
 		}
 	}
 	

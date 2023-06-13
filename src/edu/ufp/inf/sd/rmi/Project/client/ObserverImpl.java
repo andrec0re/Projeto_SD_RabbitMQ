@@ -154,7 +154,7 @@ public class ObserverImpl extends UnicastRemoteObject implements ObserverRI {
                     Game.player.get(Game.btl.currentplayer).Cancle();
                     break;
                 case "start":
-                    new edu.ufp.inf.sd.rmi.Project.client.menus.Pause();
+                    //new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(ob);
                     break;
                 case "endTurn":
                     MenuHandler.CloseMenu();

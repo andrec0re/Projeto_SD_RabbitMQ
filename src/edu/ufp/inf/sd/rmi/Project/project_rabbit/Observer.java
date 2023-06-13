@@ -43,10 +43,10 @@ public class Observer {
     private edu.ufp.inf.sd.rmi.Project.project_rabbit.ObserverGuiClient gui;
 
     //Preferences for exchange...
-    private  Channel channelToRabbitMq;
-    private  Channel channelToRabbitMqFrontServer;
+    public   Channel channelToRabbitMq;
+    public   Channel channelToRabbitMqFrontServer;
 
-    private  String exchangeName;
+    public   String exchangeName;
     private  BuiltinExchangeType exchangeType;
     private  String[] exchangeBindingKeys;
     private  String messageFormat;
@@ -67,7 +67,21 @@ public class Observer {
     private String receivedMessage;
     boolean messagerecived=false;
     public ArrayList<String> jogadoresLobby = new ArrayList<>();
+    private boolean turn=false;
 
+    public boolean isTurn() throws RemoteException {
+        return turn;
+    }
+
+    public void setTurn(boolean turn) throws RemoteException{
+        this.turn = turn;
+        if (turn){
+            System.out.println("Your turn\n");
+        }
+        else {
+            System.out.println("Waiting turn\n");
+        }
+    }
 
     public Observer(ObserverGuiClient gui, String host, int port, String user, String pass, String exchangeName,String queueName,String queueFrontServer, BuiltinExchangeType exchangeType, String messageFormat, String name) throws IOException, TimeoutException, InterruptedException {
         Scanner myObj = new Scanner(System.in);  // Create a Scanner object
@@ -126,21 +140,21 @@ public class Observer {
         }else {
             donoLobby=inp;
             json.put("operation","Enter lobby");
-            json.put("lobby",donoLobby);
+            json.put("lobby",this.donoLobby);
             json.put("user",this.user);
             json.put("mapa", map); // Always include the map when a player enters the lobby
             this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
-            bindExchangeToChannelRabbitMQ(donoLobby);
-            attachConsumerToChannelExchangeWithKey(donoLobby);
+            bindExchangeToChannelRabbitMQ(this.donoLobby);
+            attachConsumerToChannelExchangeWithKey(this.donoLobby);
             this.sendMessage(json.toString());
         }
-        //json.clear();
+        json.clear();
         int opt=0;
         while (true) {
             if (this.user.equals(this.donoLobby)) { // Lobby owner
                 System.out.println("1- Comecar Jogo");
                 System.out.println("2- Imprimir jogadores no lobby");
-                //System.out.println("3- Sair");
+                System.out.println("3- Sair");
                 opt = myObj.nextInt();
                 switch (opt) {
                     case 1:
@@ -151,14 +165,16 @@ public class Observer {
                         System.out.println("Player 1\n Mapa-"+this.map);
                         startGame=true;
                         // Lobby owner starts the game
-                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
+                        this.Game = new Game(this.map, this.user,this);
+                        //ThreadJogo run = new ThreadJogo(this.Game, this.user, this.map,this);
+                        ThreadJogo run = new ThreadJogo(this.Game);
                         new Thread(run).start();
                         break;
                     case 2:
                         System.out.println(this.printMeuLobby());
                         break;
-                    /*case 3:
-                        return;*/
+                    case 3:
+                        return;
                     default:
                         System.out.println("Opcao invalida");
                         break;
@@ -167,7 +183,7 @@ public class Observer {
 
                 System.out.println("1- Imprimir jogadores no lobby");
                 System.out.println("2- Sair");
-                System.out.println("3- Start game");
+                //System.out.println("3- Start game");
                 opt = myObj.nextInt();
                 switch (opt) {
                     case 1:
@@ -176,13 +192,13 @@ public class Observer {
                     case 2:
                         System.out.println("Leaving...\n");
                         return;
-                    case 3:
+                   /* case 3:
                         System.out.println("Starting game...");
                         System.out.println("Mapa: " + this.mapa);
                         System.out.println("Lobby: " + this.jogadoresLobby);
-                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
+                        ThreadJogo run = new ThreadJogo(this.Game, this.user, this.map,this);
                         new Thread(run).start();
-                        break;
+                        break;*/
                     default:
                         System.out.println("Opcao invalida");
                         break;
@@ -308,10 +324,12 @@ public class Observer {
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
                     if (json.getBoolean("comecar jogo")) {
-                        //this.Game.StartGame(map);
+                        //send message to server
                         System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
                         System.out.println("Mapa " + this.map);
-                        ThreadJogo run = new ThreadJogo(this.Game, this.jogadoresLobby, this.map);
+                        this.Game = new Game(this.map, this.user,this);
+                        //ThreadJogo run = new ThreadJogo(this.Game, this.user, this.map,this);
+                        ThreadJogo run = new ThreadJogo(this.Game);
                         new Thread(run).start();
                     }
                 }
@@ -326,8 +344,10 @@ public class Observer {
                 }
                 break;
             case "MovePlayer":
-                if(this.donoLobby.equals(json.getString("lobby")))
-                    this.Game.handleState(receivedMessage);
+                System.out.println("ENTREI MOVEPLAYER \n\n\tthis.game " +this.Game);
+                if(this.donoLobby.equals(json.getString("lobby"))) {
+                    this.Game.movePlayers(receivedMessage);
+                }
                     break;
         }
     }
