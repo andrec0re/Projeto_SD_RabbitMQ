@@ -66,7 +66,7 @@ public class Observer {
 
     //Store received message to be get by gui
     private String receivedMessage;
-    boolean messagerecived=false;
+    boolean messagereceived =false;
     public ArrayList<String> jogadoresLobby = new ArrayList<>();
     private boolean turn=false;
 
@@ -104,10 +104,10 @@ public class Observer {
         json.put("user",this.user);
         this.sendMessage(json.toString());
         json.clear();
-        while (!messagerecived){
+        while (!messagereceived){
             TimeUnit.MILLISECONDS.sleep(100);
         }
-        messagerecived=false;
+        messagereceived =false;
 
         String inp=myObj.nextLine();
         if(inp.equals("0")){
@@ -337,7 +337,7 @@ public class Observer {
                 if(this.user.equals(json.getString("user"))){
                     System.out.println(json.getString("lobbys_and_players"));
                 }
-                this.messagerecived=true;
+                this.messagereceived =true;
                 break;
             case "Enter lobby":
                 JSONArray array = json.getJSONArray("jogadoresNoLobby");
@@ -355,7 +355,6 @@ public class Observer {
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
                     if (json.getBoolean("comecar jogo")) {
-                        //send message to server
                         System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
                         System.out.println("Mapa " + this.map);
                         this.Game = new Game(this.map, this.user,this);

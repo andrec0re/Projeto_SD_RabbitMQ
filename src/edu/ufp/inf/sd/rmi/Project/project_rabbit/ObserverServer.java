@@ -178,12 +178,12 @@ public class ObserverServer {
         }
     }
 
-    public void syncServers(String receivedMessage){
+    public void syncServers(String receivedMessage) throws IOException {
         System.out.println("Mensagens recebidas entre servers:" + receivedMessage);
 
         JSONObject json = new JSONObject(receivedMessage);
         String operation = json.getString("operation");
-        System.out.println(operation+operation);
+        System.out.println(operation);
         if(operation.equals("Enter lobby")){
             System.out.println("Player Entering.......");
         }else{
@@ -262,8 +262,8 @@ public class ObserverServer {
                 }else {
                     System.out.println("Server already syncronized");
                 }
-
                 break;
+
         }
 
     }
@@ -280,8 +280,8 @@ public class ObserverServer {
 
         // TODO: Publish message
         channelToRabbitMq.basicPublish(this.exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
-
     }
+
     public void sendMessageToServers(String msgToSend) throws IOException {
         //RoutingKey will be ignored by FANOUT exchange
         String routingKey="";
@@ -361,15 +361,14 @@ public class ObserverServer {
                     sendMessage(json.toString());
                     break;
                 case "MovePlayer":
-                    System.out.println("ENTREI MOVEPLAYER SERVER\n");
+                System.out.println("ENTREI MOVEPLAYER SERVER||||||||||||\n");
                     json.put("operation","MovePlayer");
                     json.put("user", json.getString("user"));
                     json.put("move", json.getString("move"));
                     json.put("lobby",json.getString("lobby"));
                     sendMessage(json.toString());
-                    //System.out.println("Message sent\n"+json.toString()+ "\n");
+                    System.out.println("Message sent\n");
                     break;
-
             }
         }
 
