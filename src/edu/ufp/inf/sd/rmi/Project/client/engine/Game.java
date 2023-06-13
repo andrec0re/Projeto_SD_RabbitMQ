@@ -247,8 +247,8 @@ public class Game extends JFrame {
 			edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
 
 			JSONObject json = new JSONObject(state);
-			String operation = json.getString("move");
-			String user = json.getString("user");
+			String operation = json.getString("lobby");
+			//String user = json.getString("user");
 			switch (operation) {
 				case "up":
 					ply.selecty--;

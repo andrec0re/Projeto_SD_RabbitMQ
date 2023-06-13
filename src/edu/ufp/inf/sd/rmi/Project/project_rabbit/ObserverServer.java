@@ -2,6 +2,7 @@ package edu.ufp.inf.sd.rmi.Project.project_rabbit;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.*;
+import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
 import edu.ufp.inf.sd.rmi.util.RabbitUtils;
 import org.json.*;
 
@@ -135,7 +136,7 @@ public class ObserverServer {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Declaring Exchange '" + this.exchangeName + "' with type " + this.exchangeType);
 
         /* TODO: Declare exchange type  */
-        channelToRabbitMq_Servers.exchangeDeclare(exchangeName+"server", BuiltinExchangeType.FANOUT);
+        channelToRabbitMq_Servers.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT);
     }
 
     /**
@@ -150,7 +151,7 @@ public class ObserverServer {
 
             /* TODO: Create binding: tell exchange to send messages to a queue; fanout exchange ignores the last parameter (binding key) */
             String routingKey = "";
-            channelToRabbitMq_Servers.queueBind(queueName,exchangeName+"server",routingKey);
+            channelToRabbitMq_Servers.queueBind(queueName,exchangeName,routingKey);
             channelToRabbitMq_Servers.queuePurge(queueName);
 
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created SERVER_Channel bound to Exchange " + this.exchangeName + "...");
@@ -203,7 +204,7 @@ public class ObserverServer {
                 System.out.println("Criei um novo lobby:" + this.lobbys_and_players);
                 break;
             case "Enter lobby":
-                String lobbyID = json.getString("lobby");
+                String lobbyID = json.getString("lobbyID"); // Use lobbyID from the JSON
                 String user = json.getString("user");
 
                 // Convert lobby ID to lobby name
@@ -229,7 +230,6 @@ public class ObserverServer {
                 break;
             case "ServerOn":
                 if(!state){
-
                         String info = json.getString("info");
                         JSONArray info1 = json.getJSONArray("lobbys");
                         JSONArray info2 = json.getJSONArray("mapa");
@@ -273,13 +273,13 @@ public class ObserverServer {
      * - Messages will be lost if no queue is bound to the exchange yet.
      * - User may be some 'username' or 'general' (for all)
      */
-    public void sendMessage(String msgToSend,String exchangeName) throws IOException {
+    public void sendMessage(String msgToSend) throws IOException {
         //RoutingKey will be ignored by FANOUT exchange
         String routingKey="";
         BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
 
         // TODO: Publish message
-        channelToRabbitMq.basicPublish(this.exchangeName+exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
+        channelToRabbitMq.basicPublish(this.exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
 
     }
     public void sendMessageToServers(String msgToSend) throws IOException {
@@ -288,7 +288,7 @@ public class ObserverServer {
         BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
 
         // TODO: Publish message
-        channelToRabbitMq.basicPublish(exchangeName+"server",routingKey,prop,msgToSend.getBytes("UTF-8"));
+        channelToRabbitMq.basicPublish(exchangeName,routingKey,prop,msgToSend.getBytes("UTF-8"));
 
     }
 
@@ -300,87 +300,78 @@ public class ObserverServer {
     }
 
 
-    public int getlobbyPLayers(int lobby){
-        int count =0;
-//        for (Map.Entry<String, Integer> set : lobbys_and_players.entrySet()) {
-//            if (set.getValue().equals(lobby))count++;
-//        }
-
-
-        return count;
-    }
-
-
     /**
      * @param receivedMessage the receivedMessage to set
      */
-    public void setReceivedMessage(String receivedMessage) throws IOException {
-        System.out.println("server "+receivedMessage);
-        JSONObject json = new JSONObject(receivedMessage);
-        String operation = json.getString("operation");
-        switch (operation){
-            case "GETLOBBYS":
-                json.put("lobbys_and_players",printLobbys());
-                sendMessage(json.toString(),"client");
-                break;
-            case "Criar lobby":
-                sendMessageToServers(receivedMessage);
-                break;
-            case "Enter lobby":
-                String lobbyID = json.getString("lobby");
-                String user = json.getString("user");
-                ArrayList<String> lobbyNames = new ArrayList<>(this.lobbys_and_players.keySet());
-
-                // Validate lobbyID is a valid integer and within the range of available lobbies
-                int lobbyIndex;
-                try {
-                    lobbyIndex = Integer.parseInt(lobbyID) - 1; // Subtract 1 because list indices start at 0
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid lobby ID: " + lobbyID);
-                    throw new RuntimeException("Invalid lobby ID: " + lobbyID);
-                }
-                if (lobbyIndex < 0 || lobbyIndex >= lobbyNames.size()) {
-                    System.out.println("Lobby ID out of range: " + lobbyID);
-                    throw new RuntimeException("Lobby ID out of range: " + lobbyID);
-                }
-
-                // Get the lobby name corresponding to the given ID
-                String lobbyName = lobbyNames.get(lobbyIndex);
-
-                // The rest of your code can remain the same, but use lobbyName instead of lobby
-                ArrayList<String> players = this.lobbys_and_players.get(lobbyName);
-                if (players == null) {
-                    System.out.println("Lobby " + lobbyName + " does not exist.");
-                    throw new RuntimeException("Lobby " + lobbyName + " does not exist.");
-                } else {
-                    if (!players.contains(user)) {
-                        players.add(user);
-                        System.out.println(user + " entrou no lobby do " + lobbyID);
-                    } else {
-                        System.out.println("User " + user + " is already in the lobby " + lobbyName);
-                    }
-                    json.put("lobby", lobbyName);
-                    json.put("jogadoresNoLobby", players);
-                    json.put("mapa", this.lobbys_and_map.get(lobbyName));
-                    json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
-                    sendMessage(json.toString(), "client");
+        public void setReceivedMessage(String receivedMessage) throws IOException {
+            System.out.println("server "+receivedMessage);
+            JSONObject json = new JSONObject(receivedMessage);
+            String operation = json.getString("operation");
+            switch (operation){
+                case "GETLOBBYS":
+                    json.put("lobbys_and_players",printLobbys());
+                    sendMessage(json.toString());
+                    break;
+                case "Criar lobby":
                     sendMessageToServers(receivedMessage);
-                }
-                break;
+                    break;
+                case "Enter lobby":
+                    String lobbyID = json.getString("lobbyID"); // Use lobbyID from the JSON
+                    String user = json.getString("user");
+                    ArrayList<String> lobbyNames = new ArrayList<>(this.lobbys_and_players.keySet());
 
-            case "LETS START THE GAME":
-                sendMessage(json.toString(), json.getString("lobby"));
-                break;
-            case "MovePlayer":
-                //String move = json.getString("move");
-                //String username = json.getString("user");
-                System.out.println("ENTREI MOVEPLAYER SERVER");
-                System.out.println("Lobby"+ json.getString("lobby") + "\n");
-                sendMessage(json.toString(), json.getString("lobby"));
-                break;
+                    // Validate lobbyID is a valid integer and within the range of available lobbies
+                    int lobbyIndex;
+                    try {
+                        lobbyIndex = Integer.parseInt(lobbyID) - 1; // Subtract 1 because list indices start at 0
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid lobby ID: " + lobbyID);
+                        throw new RuntimeException("Invalid lobby ID: " + lobbyID);
+                    }
+                    if (lobbyIndex < 0 || lobbyIndex >= lobbyNames.size()) {
+                        System.out.println("Lobby ID out of range: " + lobbyID);
+                        throw new RuntimeException("Lobby ID out of range: " + lobbyID);
+                    }
 
+                    // Get the lobby name corresponding to the given ID
+                    String lobbyName = lobbyNames.get(lobbyIndex);
+
+                    // The rest of your code can remain the same, but use lobbyName instead of lobby
+                    ArrayList<String> players = this.lobbys_and_players.get(lobbyName);
+                    if (players == null) {
+                        System.out.println("Lobby " + lobbyName + " does not exist.");
+                        throw new RuntimeException("Lobby " + lobbyName + " does not exist.");
+                    } else {
+                        if (!players.contains(user)) {
+                            players.add(user);
+                            System.out.println(user + " entrou no lobby do " + lobbyID);
+                        } else {
+                            System.out.println("User " + user + " is already in the lobby " + lobbyName);
+                        }
+                        json.put("lobby", "teste1");
+                        json.put("jogadoresNoLobby", players);
+                        json.put("mapa", this.lobbys_and_map.get(lobbyName));
+                        json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
+                        sendMessage(json.toString());
+                        sendMessageToServers(receivedMessage);
+                    }
+                    break;
+
+                case "LETS START THE GAME":
+                    sendMessage(json.toString());
+                    break;
+                case "MovePlayer":
+                    System.out.println("ENTREI MOVEPLAYER SERVER\n");
+                    json.put("operation","MovePlayer");
+                    json.put("user", json.getString("user"));
+                    json.put("move", json.getString("move"));
+                    json.put("lobby",json.getString("lobby"));
+                    sendMessage(json.toString());
+                    //System.out.println("Message sent\n"+json.toString()+ "\n");
+                    break;
+
+            }
         }
-    }
 
     private String printLobbys() {
         int pos=0;

@@ -43,9 +43,9 @@ public class FrontServer {
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
 
-            channelToServers.exchangeDeclare(exchangeName+"server", BuiltinExchangeType.FANOUT);
+            channelToServers.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT);
             String queueName =  channelToServers.queueDeclare().getQueue();
-            channelToServers.queueBind(queueName,exchangeName+"server","");
+            channelToServers.queueBind(queueName,exchangeName,"");
             channelToServers.queuePurge(queueName);
 
             //DeliverCallback is an handler callback (lambda method) to consume messages pushed by the sender.
@@ -64,7 +64,7 @@ public class FrontServer {
                     json.put("info","Server is ON");
                     getInfo1(json);
                     AMQP.BasicProperties prop = MessageProperties.PERSISTENT_TEXT_PLAIN;
-                    channelToServers.basicPublish(exchangeName+"server","",prop,json.toString().getBytes("UTF-8"));
+                    channelToServers.basicPublish(exchangeName,"",prop,json.toString().getBytes("UTF-8"));
                     System.out.println("[x] Sent to Server to sync data: '"+json.toString() + "'");
                 }else{
                     System.out.println("[x] Sent: '"+json.toString() + "'");
@@ -102,21 +102,11 @@ public class FrontServer {
                 lobbys_and_size.put(donoLobby,nrJogadores);
                 System.out.println("Criei um novo lobby:" + lobbys_and_players);
                 break;
-           /* case "Enter lobby":
-                String lobby = json.getString("lobby");
-                String user = json.getString("user");
-                System.out.println("FrontServer | "+user + " entrou no lobby do " + lobby);
 
-                if(!lobbys_and_players.get(lobby).contains(user)){
-                    lobbys_and_players.get(lobby).add(user);
-                }
-                System.out.println("Jogador "+ user+" entrou no lobby "+lobby+":" + lobbys_and_players);
-                break;
-            */
             case "Enter lobby":
-                String lobbyID = json.getString("lobby");
+                String lobbyID = json.getString("lobbyID"); // Use lobbyID from the JSON
                 String user = json.getString("user");
-                System.out.println("FrontServer | "+user + " entrou no lobby" + lobbyID);
+                System.out.println("FrontServer | " + user + " entrou no lobby " + lobbyID);
 
                 // Convert lobby ID to lobby name
                 ArrayList<String> lobbyNames = new ArrayList<>(lobbys_and_players.keySet());
@@ -139,11 +129,12 @@ public class FrontServer {
                     players = new ArrayList<>();
                     lobbys_and_players.put(lobbyName, players);
                 }
-                if(!players.contains(user)){
+                if (!players.contains(user)) {
                     players.add(user);
                 }
-                System.out.println("Jogador "+ user+" entrou no lobby :"+ lobbys_and_players);
+                System.out.println("Jogador " + user + " entrou no lobby: " + lobbys_and_players);
                 break;
+
 
         }
     }

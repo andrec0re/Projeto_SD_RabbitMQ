@@ -59,46 +59,36 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 		if (i==exit) {System.exit(0);}
 		try {
 			if (Game.GameState==Game.State.PLAYING) {
-				//edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
+				edu.ufp.inf.sd.rmi.Project.client.players.Base ply = Game.player.get(Game.btl.currentplayer);
 
 				JSONObject json = new JSONObject();
 				json.put("operation","MovePlayer");
 				System.out.println("MovePlayer sent!");
-				json.put("lobby",Game.observer.donoLobby);
-				//System.out.println("Dono lobby " + Game.observer.donoLobby);
+				//json.put("lobby",Game.observer.donoLobby);
+				json.put("lobby","teste1");
 				json.put("user", Game.username);
 
 				if (i == up) {
-					String message = Game.username + ";" + "up";
-					System.out.println(" Sent '" + message + "'");
+					System.out.println("User= "+Game.username+"\n Move= "+up);
 					json.put("move","up");		// "up" received in Game.movePlayers() and moves player
 					Game.observer.sendMessage(json.toString());
-					//Game.observer.sendMessage(message);
-					//observer.sendMessage(message);
-					//observer.channelToRabbitMq.basicPublish("",observer.exchangeName, null, message.getBytes("UTF-8"));
 				} else if (i == down) {
-					String message = Game.username + ";" + "down";
-					System.out.println(" Sent '" + message + "'");
 					json.put("move","down");
 					Game.observer.sendMessage(json.toString());
 					//Game.observer.sendMessage(message);
 					//observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
 				} else if (i == left) {
-					String message = Game.username + ";" + "left";
-					System.out.println(" [x] Sent '" + message + "'");
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
+					json.put("move","left");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == right) {
-					String message = Game.username + ";" + "right";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","right");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == select) {
-					String message = Game.username + ";" + "select";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","select");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == cancel) {
-					String message = Game.username + ";" + "cancel";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","cancel");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == start) {
 					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(observer);
 				}
@@ -109,30 +99,35 @@ public class InputHandler implements KeyListener,MouseListener,ActionListener {
 
 		try {
 			if (Game.GameState==Game.State.EDITOR) {
+				JSONObject json = new JSONObject();
+				json.put("operation","MovePlayer");
+				System.out.println("MovePlayer sent!");
+				//json.put("lobby",Game.observer.donoLobby);
+				json.put("lobby","teste1");
+				json.put("user", Game.username);
+
 				if (i == up) {
-					String message = Game.username + ";" + "up";
-					System.out.println(" [x] Sent '" + message + "'");
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
+					System.out.println("User= "+Game.username+"\n Move=up");
+					json.put("move","up");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
+
 				} else if (i == down) {
-					String message = Game.username + ";" + "down";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","down");
+					Game.observer.sendMessage(json.toString());
+					//Game.observer.sendMessage(message);
+					//observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
 				} else if (i == left) {
-					String message = Game.username + ";" + "left";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","left");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == right) {
-					String message = Game.username + ";" + "right";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","right");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == select) {
-					String message = Game.username + ";" + "select";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","select");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == cancel) {
-					String message = Game.username + ";" + "cancel";
-					observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
-					System.out.println(" [x] Sent '" + message + "'");
+					json.put("move","cancel");		// "up" received in Game.movePlayers() and moves player
+					Game.observer.sendMessage(json.toString());
 				} else if (i == start) {
 					new edu.ufp.inf.sd.rmi.Project.client.menus.Pause(observer);
 				}

@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -133,19 +134,19 @@ public class Observer {
             json.put("nr jogadores",nr_jogadores);
             this.channelToRabbitMq.exchangeDelete(queueName+ "client");
             this.channelToRabbitMq.queueDelete(queueName+"client");
-            bindExchangeToChannelRabbitMQ(this.user);
-            attachConsumerToChannelExchangeWithKey(this.user);
+            bindExchangeToChannelRabbitMQ("client");
+            attachConsumerToChannelExchangeWithKey("client");
             this.sendMessage(json.toString());
 
         }else {
-            donoLobby=inp;
             json.put("operation","Enter lobby");
-            json.put("lobby",this.donoLobby);
+            json.put("lobby","teste1");
+            json.put("lobbyID",inp);
             json.put("user",this.user);
             json.put("mapa", map); // Always include the map when a player enters the lobby
             this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
-            bindExchangeToChannelRabbitMQ(this.donoLobby);
-            attachConsumerToChannelExchangeWithKey(this.donoLobby);
+            bindExchangeToChannelRabbitMQ("client");
+            attachConsumerToChannelExchangeWithKey("client");
             this.sendMessage(json.toString());
         }
         json.clear();
@@ -227,7 +228,7 @@ public class Observer {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Declaring Exchange '" + this.exchangeName + "' with type " + this.exchangeType);
 
         /* TODO: Declare exchange type  */
-        this.channelToRabbitMq.exchangeDeclare(this.exchangeName+exchangeName,this.exchangeType);
+        this.channelToRabbitMq.exchangeDeclare(this.exchangeName,this.exchangeType);
     }
 
     /**
@@ -238,14 +239,14 @@ public class Observer {
             /* TODO: Create a non-durable, exclusive, autodelete queue with a generated name.
                 The string queueName will contain a random queue name (e.g. amq.gen-JzTY20BRgKO-HjmUJj0wLg) */
             String queueName =  channelToRabbitMq.queueDeclare().getQueue();
-
+            this.queueName=queueName;
 
             /* TODO: Create binding: tell exchange to send messages to a queue; fanout exchange ignores the last parameter (binding key) */
             String routingKey = "";
-            channelToRabbitMq.queueBind(queueName,this.exchangeName+exchangeName,routingKey);
+            channelToRabbitMq.queueBind(queueName,this.exchangeName,routingKey);
             channelToRabbitMq.queuePurge(queueName);
 
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created consumerChannel bound to Exchange " + this.exchangeName + exchangeName + "...");
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " Created consumerChannel bound to Exchange " + this.exchangeName + "...");
 
             /* Use a DeliverCallback lambda function instead of DefaultConsumer to receive messages from queue;
                DeliverCallback is an interface which provides a single method:
@@ -291,6 +292,36 @@ public class Observer {
     public String getReceivedMessage() {
         return receivedMessage;
     }
+
+
+    private void consumeMessagesFromQueue() {
+        try {
+            // Use the stored queue name
+            String queueName = this.queueName;
+
+            // Create a new channel for consuming messages
+            Channel channel = channelToRabbitMqFrontServer.getConnection().createChannel();
+
+            // Create a new consumer
+            Consumer consumer = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String message = new String(body, StandardCharsets.UTF_8);
+                    setReceivedMessage(message);
+
+                    // Notify the GUI about the new message arrival
+                    gui.updateUser();
+                }
+            };
+
+            // Start consuming messages from the queue
+            channel.basicConsume(queueName, true, consumer);
+            System.out.println("Consuming from queue\n");
+        } catch (IOException e) {
+            // Handle any exceptions that may occur
+        }
+    }
+
 
     /**
      * @param receivedMessage the receivedMessage to set
@@ -338,17 +369,17 @@ public class Observer {
             case "LETS START THE GAME":
                 if(json.has("mapa")) { // Check if the "mapa" field is present
                     this.map=json.getString("mapa");
-                    if(json.getString("lobby").equals(this.donoLobby)){
-                        this.Game.StartGame(map);
-                    }
+                    this.Game.StartGame(map);
+
                 }
                 break;
+
             case "MovePlayer":
-                System.out.println("ENTREI MOVEPLAYER \n\n\tthis.game " +this.Game);
-                if(this.donoLobby.equals(json.getString("lobby"))) {
-                    this.Game.movePlayers(receivedMessage);
-                }
-                    break;
+                System.out.println("ENTREI MOVEPLAYER USER\n");
+                json.put("user", json.getString("user"));
+                json.put("move", json.getString("move"));
+                this.Game.movePlayers(receivedMessage);
+                break;
         }
     }
 
