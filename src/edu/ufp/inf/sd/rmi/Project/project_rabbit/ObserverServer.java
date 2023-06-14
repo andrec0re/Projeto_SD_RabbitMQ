@@ -162,7 +162,7 @@ public class ObserverServer {
 
                     //Store the received message
     //                System.out.println(" [x] SERVER Tag [" + consumerTag + "] - Received '" + message + "'");
-                    syncServers(message);
+                    //syncServers(message);
 
                     // TODO: Notify the GUI about the new message arrive
                     gui.updateUser();

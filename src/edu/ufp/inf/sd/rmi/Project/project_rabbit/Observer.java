@@ -401,7 +401,7 @@ public class Observer {
                     System.out.println("MyplayerID " + this.getCurrentPlayer() + "\n");
                     String myPlayerId = this.getCurrentPlayer();
 
-                    if(this.isTurn()) {
+                    if(isTurn()) {
                         if (myPlayerId.equals(currentPlayer)) {
                             System.out.println("My turn to play  | player " + myPlayerId + "\n");
                             this.setTurn(true);
@@ -411,7 +411,7 @@ public class Observer {
                             this.setTurn(false);
                         } else if (myPlayerId.equals(nextPlayer)) {
                             this.setTurn(true);
-                            this.setCurrentPlayer(nextPlayer);
+                            this.setCurrentPlayer(currentPlayer);
                             movePlayers("endturn");
                             duplicatedturn = true;
                             this.setTurn(false);
