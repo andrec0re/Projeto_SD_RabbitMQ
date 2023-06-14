@@ -44,6 +44,7 @@ public class ObserverServer {
     private  HashMap<String,ArrayList<String>> lobbys_and_players =new HashMap<>();// Nr de Lobby e o nome do jogador no lobby
     private  HashMap<String, String> lobbys_and_map =new HashMap<String, String>();// Nr de Lobby e qts jogadores lá estão
     private  HashMap<String,Integer> lobbys_and_size =new HashMap<>();// Nr de Lobby e qts jogadores lá estão
+    private HashMap<String, String> lobbyCurrentPlayers = new HashMap<>();
     private Boolean state=false;
 
 
@@ -201,6 +202,7 @@ public class ObserverServer {
                 this.lobbys_and_players.put(donoLobby,playersNoLobby);
                 this.lobbys_and_map.put(donoLobby,mapa);
                 this.lobbys_and_size.put(donoLobby,nrJogadores);
+                this.lobbyCurrentPlayers.put(donoLobby, donoLobby);
                 System.out.println("Criei um novo lobby:" + this.lobbys_and_players);
                 break;
             case "Enter lobby":
@@ -352,6 +354,10 @@ public class ObserverServer {
                         json.put("jogadoresNoLobby", players);
                         json.put("mapa", this.lobbys_and_map.get(lobbyName));
                         json.put("comecar jogo", players.size() == this.lobbys_and_size.get(lobbyName));
+
+                        // Update the current player for the lobby
+                        String currentPlayer = lobbyCurrentPlayers.get(lobbyName);
+                        json.put("currentPlayer", currentPlayer);
                         sendMessage(json.toString());
                         //sendMessageToServers(receivedMessage);
                         //sendTestMessage();
@@ -362,16 +368,40 @@ public class ObserverServer {
                     sendMessage(json.toString());
                     break;
                 case "MovePlayer":
-                System.out.println("ENTREI MOVEPLAYER SERVER||||||||||||\n");
+                System.out.println("ENTREI MOVEPLAYER SERVER||||||||||||");
                     json.put("operation","MovePlayer");
                     json.put("user", json.getString("user"));
                     json.put("move", json.getString("move"));
                     json.put("lobby",json.getString("lobby"));
                     sendMessage(json.toString());
-                    System.out.println("Message sent\n");
+                    System.out.println("Message MOVEPLAYER-SERVER sent\n");
+                    break;
+                case "EndTurn":
+                    // Update turn
+                    String lobbyName1 = "teste1"; // Get the lobby name from the JSON
+                    String currentPlayer = lobbyCurrentPlayers.get(lobbyName1);
+                    String nextPlayer = getNextPlayerUsername(lobbyName1, currentPlayer); // Implement this method to get the username of the next player
+
+                    lobbyCurrentPlayers.put(lobbyName1, nextPlayer);
+
+                    // Send message to all players with the updated turn information
+                    JSONObject turnJson = new JSONObject();
+                    turnJson.put("operation", "UpdateTurn");
+                    turnJson.put("currentPlayer", currentPlayer);
+                    turnJson.put("nextPlayer", nextPlayer);
+                    sendMessage(turnJson.toString());
+                    System.out.println("Message ENDTURN DO SERVER sent\n");
                     break;
             }
         }
+
+    private String getNextPlayerUsername(String lobbyName, String currentPlayer) {
+        ArrayList<String> players = this.lobbys_and_players.get(lobbyName);
+        int currentPlayerIndex = players.indexOf(currentPlayer);
+        int nextPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        return players.get(nextPlayerIndex);
+    }
+
 
     private String printLobbys() {
         int pos=0;

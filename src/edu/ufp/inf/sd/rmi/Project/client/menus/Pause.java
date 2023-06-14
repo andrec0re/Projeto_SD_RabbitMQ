@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.swing.JButton;
 import edu.ufp.inf.sd.rmi.Project.client.engine.Game;
 import edu.ufp.inf.sd.rmi.Project.project_rabbit.Observer;
+import org.json.JSONObject;
 
 /**
  * This is the pause menu that is pulled up when you press the Enter button in game.
@@ -62,8 +63,11 @@ public class Pause implements ActionListener {
 			MenuHandler.CloseMenu();
 			//Game.btl.EndTurn();
 			try {
-				String message = Game.username + ";" + "endturn";
-				Game.observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
+				//String message = Game.username + ";" + "endturn";
+				//Game.observer.channelToRabbitMq.basicPublish("", observer.exchangeName, null, message.getBytes("UTF-8"));
+				JSONObject json = new JSONObject();
+				json.put("operation", "EndTurn");
+				Game.observer.sendMessage(json.toString());	//send endTurn
 			} catch (IOException er){
 				er.printStackTrace();
 			}

@@ -65,6 +65,7 @@ public class Observer {
     public int nr_jogadores=0;
     public boolean startGame = false;
     public Boolean duplicated=false;
+    public Boolean duplicatedturn=false;
 
     //Store received message to be get by gui
     private String receivedMessage;
@@ -84,6 +85,24 @@ public class Observer {
         else {
             System.out.println("Waiting turn\n");
         }
+    }
+    public String currentPlayer;
+    public String nextPlayer;
+
+    public void setCurrentPlayer(String currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public String getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public String getNextPlayer() {
+        return nextPlayer;
+    }
+
+    public String setNextPlayer(String nextPlayer) {
+        return this.nextPlayer;
     }
 
     public Observer(ObserverGuiClient gui, String host, int port, String user, String pass, String exchangeName,String queueName,String queueFrontServer, BuiltinExchangeType exchangeType, String messageFormat, String name) throws IOException, TimeoutException, InterruptedException {
@@ -134,7 +153,7 @@ public class Observer {
             json.put("dono lobby",this.user);
             json.put("mapa",map);       //path do mapa
             json.put("nr jogadores",nr_jogadores);
-            this.setTurn(true); //1st player starts to play
+            //this.setTurn(true); //1st player starts to play
             this.channelToRabbitMq.exchangeDelete(queueName+ "client");
             this.channelToRabbitMq.queueDelete(queueName+"client");
             bindExchangeToChannelRabbitMQ("client");
@@ -148,6 +167,7 @@ public class Observer {
             json.put("user",this.user);
             json.put("mapa", map); // Always include the map when a player enters the lobby
             this.jogadoresLobby.add(this.user); // Add this line to add user to lobby when they join
+            this.setNextPlayer(this.user); // Update the currentPlayer with the lobby creator's username
             bindExchangeToChannelRabbitMQ("client");
             attachConsumerToChannelExchangeWithKey("client");
             this.sendMessage(json.toString());
@@ -309,6 +329,10 @@ public class Observer {
             duplicated = false;
             return;
         }
+        if(duplicatedturn) {
+            duplicatedturn = false;
+            return;
+        }
         switch (operation){
             case "GETLOBBYS":
                 if(this.user.equals(json.getString("user"))){
@@ -332,7 +356,15 @@ public class Observer {
                     System.out.println("Jogadores no lobby neste momento: " + this.jogadoresLobby);
 
                     if (json.getBoolean("comecar jogo") && !startGame) {
-                        System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
+                        if (this.user.equals(this.donoLobby)) { // Lobby owner
+                            // Set the turn for the lobby creator
+                            this.setTurn(true);
+                            this.setCurrentPlayer(this.user); // Update the currentPlayer with the lobby creator's username
+                        } else {
+                            this.setCurrentPlayer(this.user); //next players
+                            this.setTurn(false);
+                        }
+                            System.out.println("Received boolean comecar jogo -> Max players reached\nStarting game...\n");
                         System.out.println("Mapa " + this.map);
                         //this.Game = new Game(this.map, this.user,this);
                         ThreadJogo run = new ThreadJogo(this.user, this.map,this);
@@ -354,11 +386,37 @@ public class Observer {
             case "MovePlayer":
                 if(!duplicated) {
                     System.out.println("ENTREI MOVEPLAYER USER\n");
-                    json.put("user", json.getString("user"));
+                    //json.put("user", json.getString("user"));
                     json.put("move", json.getString("move"));
                     // this.Game.movePlayers(json.getString("user"),json.getString("move"));
-                    movePlayers(json.getString("user"), json.getString("move"));
+                    movePlayers(json.getString("move"));
                     duplicated = true;
+                    break;
+                }
+            case "UpdateTurn":
+                if (!duplicatedturn) {
+                    System.out.println("Entrei updateTurn observer");
+                    String currentPlayer = json.getString("currentPlayer");
+                    String nextPlayer = json.getString("nextPlayer");
+                    System.out.println("MyplayerID " + this.getCurrentPlayer() + "\n");
+                    String myPlayerId = this.getCurrentPlayer();
+
+                    if(this.isTurn()) {
+                        if (myPlayerId.equals(currentPlayer)) {
+                            System.out.println("My turn to play  | player " + myPlayerId + "\n");
+                            this.setTurn(true);
+                            this.setCurrentPlayer(nextPlayer);
+                            movePlayers("endturn");
+                            duplicatedturn = true;
+                            this.setTurn(false);
+                        } else if (myPlayerId.equals(nextPlayer)) {
+                            this.setTurn(true);
+                            this.setCurrentPlayer(nextPlayer);
+                            movePlayers("endturn");
+                            duplicatedturn = true;
+                            this.setTurn(false);
+                        }
+                    }
                     break;
                 }
 
@@ -369,7 +427,7 @@ public class Observer {
     }
 
 
-    public void movePlayers(String user,String move) {
+    public void movePlayers(String move) {
         System.out.println("Entrei Move Players!");
         if (edu.ufp.inf.sd.rmi.Project.client.engine.Game.GameState == edu.ufp.inf.sd.rmi.Project.client.engine.Game.State.PLAYING) {
             edu.ufp.inf.sd.rmi.Project.client.players.Base ply = edu.ufp.inf.sd.rmi.Project.client.engine.Game.player.get(edu.ufp.inf.sd.rmi.Project.client.engine.Game.btl.currentplayer);
@@ -426,7 +484,7 @@ public class Observer {
 
 
 
-    private int getID() {
+    public int getID() {
         for(int i=0;i<this.jogadoresLobby.size();i++){
             if(this.jogadoresLobby.get(i).equals(this.user))
                 return i;

@@ -27,7 +27,6 @@ public class FrontServer {
             String host=args[0];
             int port=Integer.parseInt(args[1]);
             String exchangeName=args[2];
-
             String queueServers=args[3];
             String queueFrontServer=args[4];
 
@@ -54,8 +53,6 @@ public class FrontServer {
                 String message=new String(delivery.getBody(), "UTF-8");
                 Logger.getAnonymousLogger().log(Level.INFO, Thread.currentThread().getName()+": Message received " +message);
                 System.out.println(" [x] Received '" + message + "'");
-
-
 
                 JSONObject json = new JSONObject(message);
                 json.put("FrontServer","Sending message from FrontServer");
